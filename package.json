@@ -1,0 +1,125 @@
+{
+  "name": "tailwind-stash",
+  "displayName": "Tailwind Stash",
+  "description": "Collapse Tailwind CSS class strings with a CSS preview panel",
+  "version": "0.1.0",
+  "license": "MIT",
+  "publisher": "beumerr",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beumerr/tailwind-stash"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tailwindStash.collapseAll",
+        "title": "Tailwind Stash: Collapse All"
+      },
+      {
+        "command": "tailwindStash.expandAll",
+        "title": "Tailwind Stash: Expand All"
+      },
+      {
+        "command": "tailwindStash.toggleCollapse",
+        "title": "Tailwind Stash: Toggle Collapse"
+      },
+      {
+        "command": "tailwindStash.showCssPreview",
+        "title": "Tailwind Stash: Show Class Editor Panel"
+      }
+    ],
+    "configuration": {
+      "title": "Tailwind Stash",
+      "properties": {
+        "tailwindStash.foldByDefault": {
+          "type": "boolean",
+          "default": true,
+          "description": "Collapse Tailwind classes by default when a file is opened"
+        },
+        "tailwindStash.placeholderStyle": {
+          "type": "string",
+          "enum": [
+            "count",
+            "empty",
+            "count-long"
+          ],
+          "enumDescriptions": [
+            "Show just the number (e.g. \"3\")",
+            "Show only an ellipsis (…)",
+            "Show count with label (e.g. \"3 classes\")"
+          ],
+          "default": "count",
+          "description": "Style of the collapse placeholder"
+        },
+        "tailwindStash.foldedTextColor": {
+          "type": "string",
+          "default": "",
+          "description": "Color of the collapse placeholder text (e.g. \"#888\", \"rgb(150,150,150)\"). Leave empty to use the default editor code lens color."
+        },
+        "tailwindStash.minClassCount": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "description": "Minimum number of classes required before collapsing kicks in"
+        },
+        "tailwindStash.extraLanguages": {
+          "type": "array",
+          "default": [],
+          "description": "(Experimental) Additional language IDs to enable collapsing for, beyond the built-in set (html, jsx, tsx, vue, svelte, astro, php). Requires reload."
+        },
+        "tailwindStash.supportedFunctions": {
+          "type": "array",
+          "default": [
+            "cn",
+            "clsx",
+            "cva",
+            "cx",
+            "twMerge",
+            "twJoin",
+            "classNames",
+            "classnames"
+          ],
+          "description": "Function names that wrap Tailwind classes. Wrap entries in / delimiters for regex (e.g. \"/^get.*Classes$/\")"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "tailwindStash.toggleCollapse",
+        "key": "alt+shift+t",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "tailwindStash.collapseAll",
+        "key": "alt+shift+c",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "tailwindStash.expandAll",
+        "key": "alt+shift+e",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  }
+}
