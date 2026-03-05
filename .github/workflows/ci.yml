@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  branch-name:
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch name
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          PATTERN="^(feature|fix|refactor|docs|chore|test)/[a-z0-9._-]+$"
+          if [[ ! "$BRANCH" =~ $PATTERN ]]; then
+            echo "::error::Branch name '$BRANCH' does not match the required pattern."
+            echo ""
+            echo "Use one of these prefixes:"
+            echo "  feature/  - new feature"
+            echo "  fix/      - bug fix"
+            echo "  refactor/ - code refactoring"
+            echo "  docs/     - documentation"
+            echo "  chore/    - maintenance, dependencies, CI"
+            echo "  test/     - adding or updating tests"
+            echo ""
+            echo "Examples: feature/class-sorting, fix/collapse-multiline"
+            exit 1
+          fi
+
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - run: npm ci
+        env:
+          CI: true
+
+      - run: npm run format:check
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm run compile
+
+      - run: npm test
+
+  vscode-e2e:
+    runs-on: ubuntu-latest
+    needs: build
+
+    strategy:
+      matrix:
+        vscode-version: ["1.66.0", "stable"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+        env:
+          CI: true
+
+      - run: npm run compile
+
+      - name: Run VS Code ${{ matrix.vscode-version }} E2E tests
+        run: xvfb-run -a npm run test:vscode -- --version ${{ matrix.vscode-version }}
+        env:
+          DISPLAY: ":99.0"

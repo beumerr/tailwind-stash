@@ -1,0 +1,13 @@
+out/
+node_modules/
+.vscode-test/
+*.vsix
+dist/
+*.tgz
+.DS_Store
+.env
+.env.*
+coverage/
+oxlint.config.mjs.map
+.claude/
+meta.json
