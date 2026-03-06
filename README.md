@@ -72,7 +72,7 @@ This list is fully configurable via the `tailwindStash.supportedFunctions` setti
 
 ```bash
 npm install
-npm run format    # format with oxfmt (no semicolons)
+npm run format    # format with oxfmt
 npm run lint      # lint with oxlint
 npm run compile
 npm test

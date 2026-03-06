@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import { render, cleanup } from "@testing-library/preact"
-import { describe, it, expect, vi, afterEach } from "vitest"
+import { cleanup, render } from "@testing-library/preact"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { ClassEntry } from "../../src/webview/types"
 
@@ -26,12 +26,12 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    expect(container.querySelector(".element")!.textContent).toBe("div")
-    expect(container.querySelector(".line")!.textContent).toBe("L10")
-    expect(container.querySelector(".count")!.textContent).toBe("4 classes")
+    expect(container.querySelector("[data-testid='element']")!.textContent).toBe("div")
+    expect(container.querySelector("[data-testid='line']")!.textContent).toBe("10")
+    expect(container.querySelector("[data-testid='count']")!.textContent).toBe("4 classes")
   })
 
-  it("applies active class when isActive is true", () => {
+  it("applies active state when isActive is true", () => {
     const { container } = render(
       <EntryCard
         autoScroll={true}
@@ -42,10 +42,12 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    expect(container.querySelector(".entry-card")!.classList.contains("active")).toBe(true)
+    expect(container.querySelector("[data-testid='entry-card']")!.hasAttribute("data-active")).toBe(
+      true,
+    )
   })
 
-  it("does not apply active class when isActive is false", () => {
+  it("does not apply active state when isActive is false", () => {
     const { container } = render(
       <EntryCard
         autoScroll={true}
@@ -56,7 +58,9 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    expect(container.querySelector(".entry-card")!.classList.contains("active")).toBe(false)
+    expect(container.querySelector("[data-testid='entry-card']")!.hasAttribute("data-active")).toBe(
+      false,
+    )
   })
 
   it("calls onGoToRange when header is clicked", () => {
@@ -70,7 +74,9 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    container.querySelector(".header")!.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+    container
+      .querySelector("[data-testid='header']")!
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }))
     expect(onGoToRange).toHaveBeenCalledOnce()
   })
 
@@ -101,10 +107,9 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    const card = container.querySelector(".entry-card")!
+    const card = container.querySelector("[data-testid='entry-card']")!
     card.scrollIntoView = scrollIntoView
 
-    // Re-render with isActive=true
     render(
       <EntryCard
         autoScroll={true}
@@ -132,7 +137,7 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    const card = container.querySelector(".entry-card")!
+    const card = container.querySelector("[data-testid='entry-card']")!
     card.scrollIntoView = scrollIntoView
 
     render(

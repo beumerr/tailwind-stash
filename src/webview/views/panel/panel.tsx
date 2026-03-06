@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "preact/hooks"
 import { EmptyState } from "../../components/empty-state/empty-state"
 import { EntryCard } from "../../components/entry-card/entry-card"
 import { ClassEntry } from "../../types"
-import "./panel.scss"
 
 type PanelMessage =
   | {
@@ -80,8 +79,8 @@ export function Panel({ vscode }: PanelProps) {
   }
 
   return (
-    <div className="panel">
-      <h2 className="title">Tailwind Classes</h2>
+    <div>
+      <h2 className="text-sm text-description mb-3 font-medium">Tailwind Classes</h2>
       {entries.map((entry, i) => (
         <EntryCard
           autoScroll={autoScrollPanel}

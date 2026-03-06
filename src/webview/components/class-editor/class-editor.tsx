@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef } from "preact/hooks"
 
-import "./class-editor.scss"
-
 interface ClassEditorProps {
   classes: Array<string>
   debounceMs?: number
@@ -41,7 +39,7 @@ export function ClassEditor({ classes, debounceMs = 500, onChange, onFocus }: Cl
 
   return (
     <textarea
-      className="class-editor"
+      className="block w-full border-none outline-none resize-y px-2.5 py-2 text-editor-fg bg-editor-bg leading-relaxed min-h-10 focus:bg-ts-textarea-focus-bg"
       onFocus={onFocus}
       onInput={handleInput}
       ref={textareaRef}

@@ -62,6 +62,13 @@ export default defineConfig({
         "perfectionist/sort-objects": "off",
       },
     },
+    {
+      // Webview uses custom @theme inline vars that the plugin can't resolve
+      files: ["src/webview/**"],
+      rules: {
+        "better-tailwindcss/no-unknown-classes": "off",
+      },
+    },
   ],
   plugins: ["typescript", "import", "react", "unicorn"],
   rules: {

@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
-// oxlint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../src/webview/global.d.ts" />
-import { render, cleanup, act } from "@testing-library/preact"
-import { describe, it, expect, vi, afterEach } from "vitest"
+import "../../src/webview/global.d.ts"
+import { act, cleanup, render } from "@testing-library/preact"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { ClassEntry } from "../../src/webview/types"
 
@@ -33,7 +32,7 @@ describe("Panel", () => {
   it("shows empty state when no entries", () => {
     const vscode = createVscodeApi()
     const { container } = render(<Panel vscode={vscode} />)
-    expect(container.querySelector(".empty-state")).toBeTruthy()
+    expect(container.querySelector("[data-testid='empty-state']")).toBeTruthy()
     expect(container.textContent).toContain("No Tailwind classes detected")
   })
 
@@ -43,7 +42,7 @@ describe("Panel", () => {
 
     postWindowMessage({ activeIndex: 0, entries: sampleEntries, type: "update" })
 
-    const cards = container.querySelectorAll(".entry-card")
+    const cards = container.querySelectorAll("[data-testid='entry-card']")
     expect(cards).toHaveLength(2)
   })
 
@@ -54,9 +53,9 @@ describe("Panel", () => {
     postWindowMessage({ activeIndex: -1, entries: sampleEntries, type: "update" })
 
     expect(container.textContent).toContain("div")
-    expect(container.textContent).toContain("L5")
+    expect(container.textContent).toContain("5")
     expect(container.textContent).toContain("button")
-    expect(container.textContent).toContain("L12")
+    expect(container.textContent).toContain("12")
   })
 
   it("marks the active entry card", () => {
@@ -65,9 +64,9 @@ describe("Panel", () => {
 
     postWindowMessage({ activeIndex: 1, entries: sampleEntries, type: "update" })
 
-    const cards = container.querySelectorAll(".entry-card")
-    expect(cards[0].classList.contains("active")).toBe(false)
-    expect(cards[1].classList.contains("active")).toBe(true)
+    const cards = container.querySelectorAll("[data-testid='entry-card']")
+    expect(cards[0].hasAttribute("data-active")).toBe(false)
+    expect(cards[1].hasAttribute("data-active")).toBe(true)
   })
 
   it("updates active index on setActive message", () => {
@@ -77,9 +76,9 @@ describe("Panel", () => {
     postWindowMessage({ activeIndex: 0, entries: sampleEntries, type: "update" })
     postWindowMessage({ index: 1, type: "setActive" })
 
-    const cards = container.querySelectorAll(".entry-card")
-    expect(cards[0].classList.contains("active")).toBe(false)
-    expect(cards[1].classList.contains("active")).toBe(true)
+    const cards = container.querySelectorAll("[data-testid='entry-card']")
+    expect(cards[0].hasAttribute("data-active")).toBe(false)
+    expect(cards[1].hasAttribute("data-active")).toBe(true)
   })
 
   it("switches active card when textarea is focused", () => {
@@ -94,9 +93,9 @@ describe("Panel", () => {
         .dispatchEvent(new FocusEvent("focus", { bubbles: true }))
     })
 
-    const cards = container.querySelectorAll(".entry-card")
-    expect(cards[0].classList.contains("active")).toBe(false)
-    expect(cards[1].classList.contains("active")).toBe(true)
+    const cards = container.querySelectorAll("[data-testid='entry-card']")
+    expect(cards[0].hasAttribute("data-active")).toBe(false)
+    expect(cards[1].hasAttribute("data-active")).toBe(true)
   })
 
   it("ignores setActive messages while panel has focus", () => {
@@ -105,12 +104,10 @@ describe("Panel", () => {
 
     postWindowMessage({ activeIndex: 0, entries: sampleEntries, type: "update" })
 
-    // Simulate panel gaining focus
     act(() => {
       document.dispatchEvent(new FocusEvent("focusin"))
     })
 
-    // Extension tries to set active to 0, but panel has focus on card 1
     act(() => {
       container
         .querySelectorAll("textarea")[1]
@@ -118,8 +115,8 @@ describe("Panel", () => {
     })
     postWindowMessage({ index: 0, type: "setActive" })
 
-    const cards = container.querySelectorAll(".entry-card")
-    expect(cards[1].classList.contains("active")).toBe(true)
+    const cards = container.querySelectorAll("[data-testid='entry-card']")
+    expect(cards[1].hasAttribute("data-active")).toBe(true)
   })
 
   it("sends goToRange message when header is clicked", () => {
@@ -128,7 +125,7 @@ describe("Panel", () => {
 
     postWindowMessage({ activeIndex: -1, entries: sampleEntries, type: "update" })
 
-    const header = container.querySelector(".header")!
+    const header = container.querySelector("[data-testid='header']")!
     header.dispatchEvent(new MouseEvent("click", { bubbles: true }))
 
     expect(vscode.postMessage).toHaveBeenCalledWith({ index: 0, type: "goToRange" })
@@ -140,7 +137,7 @@ describe("Panel", () => {
 
     postWindowMessage({ activeIndex: -1, entries: sampleEntries, type: "update" })
 
-    const counts = container.querySelectorAll(".count")
+    const counts = container.querySelectorAll("[data-testid='count']")
     expect(counts[0].textContent).toBe("3 classes")
     expect(counts[1].textContent).toBe("3 classes")
   })
@@ -150,9 +147,9 @@ describe("Panel", () => {
     const { container } = render(<Panel vscode={vscode} />)
 
     postWindowMessage({ activeIndex: 0, entries: sampleEntries, type: "update" })
-    expect(container.querySelectorAll(".entry-card")).toHaveLength(2)
+    expect(container.querySelectorAll("[data-testid='entry-card']")).toHaveLength(2)
 
     postWindowMessage({ activeIndex: -1, entries: [], type: "update" })
-    expect(container.querySelector(".empty-state")).toBeTruthy()
+    expect(container.querySelector("[data-testid='empty-state']")).toBeTruthy()
   })
 })

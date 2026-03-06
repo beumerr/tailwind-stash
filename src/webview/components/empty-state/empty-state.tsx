@@ -1,12 +1,13 @@
-import "./empty-state.scss"
-
 interface EmptyStateProps {
   message: string
 }
 
 export function EmptyState({ message }: EmptyStateProps) {
   return (
-    <div className="empty-state">
+    <div
+      className="flex items-center justify-center h-[80vh] text-description"
+      data-testid="empty-state"
+    >
       <p>{message}</p>
     </div>
   )
