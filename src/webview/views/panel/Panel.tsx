@@ -62,7 +62,10 @@ export function Panel({ vscode }: PanelProps) {
           onGoToRange={() => {
             vscode.postMessage({ type: 'goToRange', index: i });
           }}
-          onSelect={() => setActiveIndex(i)}
+          onSelect={() => {
+            setActiveIndex(i);
+            vscode.postMessage({ type: 'selectEntry', index: i });
+          }}
         />
       ))}
     </div>

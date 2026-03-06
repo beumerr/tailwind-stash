@@ -1,9 +1,11 @@
 .class-editor {
+  display: block;
   width: 100%;
   border: none;
   outline: none;
   resize: vertical;
   padding: 8px 10px;
+  box-sizing: border-box;
   font-family: inherit;
   font-size: inherit;
   color: var(--vscode-editor-foreground);
