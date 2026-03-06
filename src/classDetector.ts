@@ -48,15 +48,21 @@ export function detectClassRanges(
   for (const fn of supportedFunctions) {
     const regexMatch = fn.match(/^\/(.+)\/$/);
     if (regexMatch) {
-      regexPatterns.push(regexMatch[1]);
+      // Strip ^/$ anchors — they don't work inside a group in a larger regex.
+      // Use \b boundaries instead for correct matching.
+      const cleaned = regexMatch[1].replace(/^\^/, '').replace(/\$$/, '');
+      regexPatterns.push(`\\b${cleaned}`);
     } else {
       literalNames.push(escapeRegex(fn));
     }
   }
-  const allPatterns = [...literalNames, ...regexPatterns];
+  const allPatterns = [
+    ...literalNames.map((n) => `\\b${n}`),
+    ...regexPatterns,
+  ];
   if (allPatterns.length === 0) return results;
   const funcPattern = new RegExp(
-    `\\b(${allPatterns.join('|')})\\s*\\(`,
+    `(${allPatterns.join('|')})\\s*\\(`,
     'g'
   );
 

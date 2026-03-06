@@ -23,7 +23,7 @@ src/
 
 ## Submitting Changes
 
-1. Fork the repo and create a branch from `main`
+1. Fork the repo and create a branch from `master`
 2. Make your changes
 3. Test with the Extension Development Host (`F5`)
 4. Submit a pull request

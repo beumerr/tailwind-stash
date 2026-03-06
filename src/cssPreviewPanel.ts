@@ -146,23 +146,7 @@ export class CSSPreviewPanel {
   }
 
   private findActiveIndex(editor: vscode.TextEditor, ranges: ClassRange[]): number {
-    const cursor = editor.selection.active;
-    let activeIndex = -1;
-    let nearestDist = Infinity;
-
-    for (let i = 0; i < ranges.length; i++) {
-      const cr = ranges[i];
-      if (cr.range.contains(cursor)) return i;
-      const dist = Math.min(
-        Math.abs(cr.range.start.line - cursor.line),
-        Math.abs(cr.range.end.line - cursor.line)
-      );
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        activeIndex = i;
-      }
-    }
-    return activeIndex;
+    return findActiveIndex(editor.selection.active.line, ranges);
   }
 
   private getHtml(content: string): string {
@@ -325,10 +309,32 @@ export class CSSPreviewPanel {
   }
 }
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+export function findActiveIndex(
+  cursorLine: number,
+  ranges: { range: { start: { line: number }; end: { line: number } } }[]
+): number {
+  let activeIndex = -1;
+  let nearestDist = Infinity;
+
+  for (let i = 0; i < ranges.length; i++) {
+    const cr = ranges[i];
+    if (cursorLine >= cr.range.start.line && cursorLine <= cr.range.end.line) return i;
+    const dist = Math.min(
+      Math.abs(cr.range.start.line - cursorLine),
+      Math.abs(cr.range.end.line - cursorLine)
+    );
+    if (dist < nearestDist) {
+      nearestDist = dist;
+      activeIndex = i;
+    }
+  }
+  return activeIndex;
 }
