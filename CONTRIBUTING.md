@@ -187,7 +187,7 @@ Rules:
 
 ## Linting
 
-The project uses **oxlint** with the config in `oxlint.config.mts`. Key plugins:
+The project uses **oxlint** with the config in `oxlint.config.mjs`. Key plugins:
 
 - `perfectionist` — enforces sorted imports, props, objects, interfaces
 - `unused-imports` — removes unused imports

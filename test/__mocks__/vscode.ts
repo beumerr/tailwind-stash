@@ -160,8 +160,13 @@ export class MarkdownString {
   constructor(public value: string = "") {}
 }
 
-// oxlint-disable-next-line @typescript-eslint/no-explicit-any
-export function createMockDocument(text: string): any {
+export interface MockDocument {
+  getText: () => string
+  positionAt: (offset: number) => Position
+  uri?: { scheme: string; toString: () => string }
+}
+
+export function createMockDocument(text: string): MockDocument {
   const lines = text.split("\n")
   return {
     getText: () => text,
@@ -193,9 +198,8 @@ const eventListeners = {
 
 export function _reset() {
   commandHandlers.clear()
-  for (const key of Object.keys(eventListeners)) {
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(eventListeners as any)[key] = []
+  for (const key of Object.keys(eventListeners) as (keyof typeof eventListeners)[]) {
+    eventListeners[key] = []
   }
   window.activeTextEditor = undefined
   window.visibleTextEditors = []
@@ -295,15 +299,13 @@ export function createMockWebviewPanel() {
   return panel
 }
 
-// oxlint-disable-next-line @typescript-eslint/no-explicit-any
-let lastCreatedPanel: any = undefined
+let lastCreatedPanel: ReturnType<typeof createMockWebviewPanel> | undefined = undefined
 export function _getLastPanel() {
   return lastCreatedPanel
 }
 
 export const window = {
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  activeTextEditor: undefined as any,
+  activeTextEditor: undefined as ReturnType<typeof createMockEditor> | undefined,
   createTextEditorDecorationType(_opts: unknown) {
     return { dispose() {} }
   },

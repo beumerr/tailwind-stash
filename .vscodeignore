@@ -10,7 +10,7 @@ scripts/**
 tsconfig.json
 vitest.config.ts
 esbuild.webview.mts
-oxlint.config.mts
+oxlint.config.mjs
 CONTRIBUTING.md
 **/*.ts
 **/*.tsx

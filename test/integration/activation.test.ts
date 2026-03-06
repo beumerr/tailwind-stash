@@ -9,6 +9,8 @@ import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
+  Position,
+  Selection,
   _fireEvent,
   _getCommandHandler,
   _getLastPanel,
@@ -19,12 +21,19 @@ import {
 import { CSSPreviewPanel } from "../../src/core/cssPreviewPanel"
 import { activate } from "../../src/extension"
 
+interface PlaceholderDecoration {
+  renderOptions: { before: { contentText: string } }
+}
+
+interface HoverDecoration {
+  hoverMessage: { value: string }
+}
+
 const projectRoot = path.resolve(__dirname, "../..")
 
 function makeContext() {
   const subscriptions: { dispose: () => void }[] = []
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  return { extensionPath: projectRoot, subscriptions } as any
+  return { extensionPath: projectRoot, subscriptions } as unknown as Parameters<typeof activate>[0]
 }
 
 const HTML_WITH_CLASSES = `<div>
@@ -110,8 +119,7 @@ describe("decoration content matches classDetector output", () => {
 
     for (const call of placeholderCalls) {
       for (const dec of call.decorations) {
-        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        const d = dec as any
+        const d = dec as PlaceholderDecoration
         const count = Number.parseInt(d.renderOptions.before.contentText, 10)
         expect(count).toBeGreaterThanOrEqual(4)
       }
@@ -128,9 +136,8 @@ describe("decoration content matches classDetector output", () => {
     )
 
     // At least one decoration should mention classes from the document
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const allHoverText = placeholderCalls.flatMap((c) =>
-      c.decorations.map((d: any) => d.hoverMessage.value),
+      c.decorations.map((d) => (d as HoverDecoration).hoverMessage.value),
     )
     const combinedHover = allHoverText.join(" ")
     expect(combinedHover).toContain("flex")
@@ -262,8 +269,7 @@ describe("cursor movement integration", () => {
     activate(makeContext())
 
     // Move cursor to line 1 (the button with classes)
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(editor as any).selection = { active: { line: 1 } }
+    editor.selection = new Selection(new Position(1, 0))
     editor._decorationCalls.splice(0)
 
     _fireEvent("onDidChangeTextEditorSelection", {
@@ -297,8 +303,7 @@ describe("cursor movement integration", () => {
     const messagesAfterPanel = panel._getMessages().length
 
     // Update the editor's selection to line 2 (the span — second class range)
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(editor as any).selection = { active: { line: 2 } }
+    editor.selection = new Selection(new Position(2, 0))
     _fireEvent("onDidChangeTextEditorSelection", {
       selections: [{ active: { line: 2 } }],
       textEditor: editor,

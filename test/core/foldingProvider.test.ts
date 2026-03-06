@@ -3,6 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { _fireEvent, _reset, createMockEditor, window, workspace } from "../__mocks__/vscode"
 import { FoldingManager } from "../../src/core/foldingProvider"
 
+interface PlaceholderDecoration {
+  renderOptions: { before: { contentText: string } }
+}
+
+interface HoverDecoration {
+  hoverMessage: { value: string }
+}
+
 function createManager(editorText?: string, opts?: { cursorLine?: number }) {
   const editor = editorText ? createMockEditor(editorText, opts) : undefined
   window.activeTextEditor = editor
@@ -166,8 +174,7 @@ describe("updateDecorations", () => {
         c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    const decoration = placeholderCall!.decorations[0] as any
+    const decoration = placeholderCall!.decorations[0] as PlaceholderDecoration
     expect(decoration.renderOptions.before.contentText).toBe("4")
   })
 
@@ -191,8 +198,7 @@ describe("updateDecorations", () => {
         c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    const decoration = placeholderCall!.decorations[0] as any
+    const decoration = placeholderCall!.decorations[0] as PlaceholderDecoration
     expect(decoration.renderOptions.before.contentText).toBe("4 classes")
 
     workspace.getConfiguration = origGet
@@ -218,8 +224,7 @@ describe("updateDecorations", () => {
         c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    const decoration = placeholderCall!.decorations[0] as any
+    const decoration = placeholderCall!.decorations[0] as PlaceholderDecoration
     expect(decoration.renderOptions.before.contentText).toBe("…")
 
     workspace.getConfiguration = origGet
@@ -245,8 +250,7 @@ describe("updateDecorations", () => {
         c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    const decoration = placeholderCall!.decorations[0] as any
+    const decoration = placeholderCall!.decorations[0] as PlaceholderDecoration
     expect(decoration.renderOptions.before.contentText).toBe("4")
 
     workspace.getConfiguration = origGet
@@ -275,8 +279,7 @@ describe("updateDecorations", () => {
         c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    const decoration = placeholderCall!.decorations[0] as any
+    const decoration = placeholderCall!.decorations[0] as PlaceholderDecoration
     expect(decoration.renderOptions.before.contentText).toBe("1 class")
 
     workspace.getConfiguration = origGet
@@ -291,8 +294,7 @@ describe("updateDecorations", () => {
       (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).hoverMessage,
     )
     expect(placeholderCall).toBeDefined()
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    const decoration = placeholderCall!.decorations[0] as any
+    const decoration = placeholderCall!.decorations[0] as HoverDecoration
     expect(decoration.hoverMessage.value).toContain("flex")
     expect(decoration.hoverMessage.value).toContain("rounded")
   })

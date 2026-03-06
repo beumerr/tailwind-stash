@@ -7,7 +7,6 @@ node_modules/
 .env
 .env.*
 coverage/
-oxlint.config.mjs
 oxlint.config.mjs.map
 .claude/
 meta.json

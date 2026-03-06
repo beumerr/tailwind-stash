@@ -18,7 +18,7 @@ const requiredFiles = [
   "package-lock.json",
   "tsconfig.json",
   "vitest.config.ts",
-  "oxlint.config.mts",
+  "oxlint.config.mjs",
   "esbuild.webview.mts",
   ".gitignore",
   ".vscodeignore",

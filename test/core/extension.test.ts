@@ -7,10 +7,8 @@ import { activate, deactivate } from "../../src/extension"
 const projectRoot = path.resolve(__dirname, "../..")
 
 function makeContext() {
-  // oxlint-ignore-next-line
-  const subscriptions: unknown[] = []
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  return { extensionPath: projectRoot, subscriptions } as any
+  const subscriptions: { dispose: () => void }[] = []
+  return { extensionPath: projectRoot, subscriptions } as unknown as Parameters<typeof activate>[0]
 }
 
 beforeEach(() => {
