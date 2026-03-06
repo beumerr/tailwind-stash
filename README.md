@@ -2,6 +2,8 @@
 
 A VS Code extension that collapses long Tailwind CSS class strings to keep your templates clean and readable. Includes an editable side panel for managing classes across your file.
 
+![Tailwind Stash demo](docs/tailwind-stash.gif)
+
 ## Features
 
 ### Horizontal Collapse
