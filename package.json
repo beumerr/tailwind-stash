@@ -1,7 +1,7 @@
 {
   "name": "tailwind-stash",
   "displayName": "Tailwind Stash",
-  "description": "Collapse Tailwind CSS class strings with a CSS preview panel",
+  "description": "Collapse Tailwind CSS class strings with bi-directional editor panel",
   "version": "0.1.0",
   "license": "MIT",
   "publisher": "beumerr",
