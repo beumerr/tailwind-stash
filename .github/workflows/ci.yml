@@ -57,7 +57,7 @@ jobs:
 
       - run: npm run compile
 
-      - run: npm test
+      - run: npm run test:unit
 
   vscode-e2e:
     runs-on: ubuntu-latest

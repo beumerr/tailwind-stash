@@ -37,7 +37,7 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run compile
-      - run: npm test
+      - run: npm run test:unit
 
       - name: Publish to VS Code Marketplace
         run: npx @vscode/vsce publish --no-update-package-json
