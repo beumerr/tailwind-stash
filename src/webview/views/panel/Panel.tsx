@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { ClassEntry } from '../../types';
 import { EntryCard } from './EntryCard/EntryCard';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
@@ -15,6 +15,18 @@ interface PanelProps {
 export function Panel({ vscode }: PanelProps) {
   const [entries, setEntries] = useState<ClassEntry[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const hasFocusRef = useRef(false);
+
+  useEffect(() => {
+    const onFocusIn = () => { hasFocusRef.current = true; };
+    const onFocusOut = () => { hasFocusRef.current = false; };
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+    return () => {
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('focusout', onFocusOut);
+    };
+  }, []);
 
   useEffect(() => {
     const handler = (event: MessageEvent<PanelMessage>) => {
@@ -23,7 +35,9 @@ export function Panel({ vscode }: PanelProps) {
         setEntries(msg.entries);
         setActiveIndex(msg.activeIndex);
       } else if (msg.type === 'setActive') {
-        setActiveIndex(msg.index);
+        if (!hasFocusRef.current) {
+          setActiveIndex(msg.index);
+        }
       }
     };
     window.addEventListener('message', handler);
@@ -48,6 +62,7 @@ export function Panel({ vscode }: PanelProps) {
           onGoToRange={() => {
             vscode.postMessage({ type: 'goToRange', index: i });
           }}
+          onSelect={() => setActiveIndex(i)}
         />
       ))}
     </div>

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import path from 'path';
-import { _reset, _getCommandHandler, window } from './__mocks__/vscode';
-import { activate, deactivate } from '../src/extension';
+import { _reset, _getCommandHandler, window } from '../__mocks__/vscode';
+import { activate, deactivate } from '../../src/extension';
 
-const projectRoot = path.resolve(__dirname, '..');
+const projectRoot = path.resolve(__dirname, '../..');
 
 function makeContext() {
   const subscriptions: any[] = [];

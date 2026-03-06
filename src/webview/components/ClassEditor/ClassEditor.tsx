@@ -4,10 +4,11 @@ import './ClassEditor.css';
 interface ClassEditorProps {
   classes: string[];
   onChange: (classes: string) => void;
+  onFocus?: () => void;
   debounceMs?: number;
 }
 
-export function ClassEditor({ classes, onChange, debounceMs = 500 }: ClassEditorProps) {
+export function ClassEditor({ classes, onChange, onFocus, debounceMs = 500 }: ClassEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -43,6 +44,7 @@ export function ClassEditor({ classes, onChange, debounceMs = 500 }: ClassEditor
       class="class-editor"
       spellcheck={false}
       onInput={handleInput}
+      onFocus={onFocus}
       value={classes.join('\n')}
     />
   );

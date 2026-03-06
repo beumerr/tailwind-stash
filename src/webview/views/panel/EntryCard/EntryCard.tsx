@@ -8,9 +8,10 @@ interface EntryCardProps {
   isActive: boolean;
   onUpdateClasses: (classes: string) => void;
   onGoToRange: () => void;
+  onSelect: () => void;
 }
 
-export function EntryCard({ entry, isActive, onUpdateClasses, onGoToRange }: EntryCardProps) {
+export function EntryCard({ entry, isActive, onUpdateClasses, onGoToRange, onSelect }: EntryCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export function EntryCard({ entry, isActive, onUpdateClasses, onGoToRange }: Ent
         <span class="entry-card__line">L{entry.line}</span>
         <span class="entry-card__count">{entry.classes.length} classes</span>
       </div>
-      <ClassEditor classes={entry.classes} onChange={onUpdateClasses} />
+      <ClassEditor classes={entry.classes} onChange={onUpdateClasses} onFocus={onSelect} />
     </div>
   );
 }

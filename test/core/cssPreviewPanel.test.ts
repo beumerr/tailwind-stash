@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findActiveIndex } from '../src/core/cssPreviewPanel';
+import { findActiveIndex } from '../../src/core/cssPreviewPanel';
 
 // ─── findActiveIndex ────────────────────────────────────────────────
 

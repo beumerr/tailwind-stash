@@ -94,6 +94,11 @@ export class CSSPreviewPanel {
       editor.selection = new vscode.Selection(cr.range.start, cr.range.start);
       editor.revealRange(cr.range, vscode.TextEditorRevealType.InCenter);
       vscode.window.showTextDocument(editor.document, editor.viewColumn);
+    } else if (msg.type === 'selectEntry') {
+      editor.selection = new vscode.Selection(cr.range.start, cr.range.start);
+      editor.revealRange(cr.range, vscode.TextEditorRevealType.InCenter);
+      this.lastActiveIndex = msg.index!;
+      this.panel.webview.postMessage({ type: 'setActive', index: msg.index });
     }
   }
 
