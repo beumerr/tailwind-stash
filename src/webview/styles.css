@@ -4,10 +4,9 @@
   --color-editor-fg: var(--vscode-editor-foreground);
   --color-editor-bg: var(--vscode-editor-background);
   --color-description: var(--vscode-descriptionForeground);
-  --color-border: var(--vscode-textBlockQuote-border);
+  --color-border: var(--vscode-panel-border, var(--vscode-textBlockQuote-border));
   --color-quote-bg: var(--vscode-textBlockQuote-background);
   --color-focus: var(--vscode-focusBorder);
-  --color-selection-bg: var(--vscode-editor-selectionBackground);
   --color-ts-element: var(--ts-element-color, var(--vscode-symbolIcon-classForeground, #ee9d28));
   --color-ts-active-border: var(--ts-active-border-color, var(--vscode-focusBorder));
   --color-ts-textarea-focus-bg: var(

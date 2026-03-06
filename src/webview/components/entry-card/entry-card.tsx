@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "preact/hooks"
 
-import { ClassEntry } from "../../types"
-import { cn } from "../../utils/cn"
+import { ClassEntry } from "../../../utils/types"
+import { cn } from "../../../utils/utils"
 import { ClassEditor } from "../class-editor/class-editor"
+import { EntryCardHeader } from "./entry-card-header"
 
 interface EntryCardProps {
   autoScroll: boolean
@@ -36,20 +37,15 @@ export function EntryCard({
         isActive && "opacity-100 border-ts-active-border",
       )}
       data-active={isActive || undefined}
-      data-testid="entry-card"
       ref={cardRef}
+      role="article"
     >
-      <div
-        className="flex justify-between items-center px-2.5 py-1.5 bg-quote-bg border-b border-border cursor-pointer"
-        data-testid="header"
+      <EntryCardHeader
+        count={entry.classes.length}
+        element={entry.element}
+        line={entry.line}
         onClick={onGoToRange}
-      >
-        <span data-testid="element">{entry.element}</span>
-        <span data-testid="line">{entry.line}</span>
-        <span className="text-[11px] text-description" data-testid="count">
-          {entry.classes.length} classes
-        </span>
-      </div>
+      />
       <ClassEditor classes={entry.classes} onChange={onUpdateClasses} onFocus={onSelect} />
     </div>
   )

@@ -9,6 +9,10 @@
     "type": "git",
     "url": "https://github.com/beumerr/tailwind-stash"
   },
+  "bugs": {
+    "url": "https://github.com/beumerr/tailwind-stash/issues"
+  },
+  "homepage": "https://github.com/beumerr/tailwind-stash#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -210,19 +214,23 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run format:check && npm run lint && npm test && npm run compile",
-    "compile": "tsc -p ./ && node esbuild.webview.mjs",
-    "compile:webview": "node esbuild.webview.mjs",
-    "watch": "tsc -watch -p ./ & node esbuild.webview.mjs --watch",
-    "lint": "oxlint -c oxlint.config.mts",
-    "format": "oxfmt --write src/ test/ vitest.config.ts esbuild.webview.mjs oxlint.config.mts",
-    "format:check": "oxfmt --check src/ test/ vitest.config.ts esbuild.webview.mjs oxlint.config.mts",
-    "test": "vitest run"
+    "vscode:prepublish": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run compile",
+    "compile": "tsc -p ./ && tsx esbuild.webview.mts",
+    "compile:webview": "tsx esbuild.webview.mts",
+    "watch": "tsc -watch -p ./ & tsx esbuild.webview.mts --watch",
+    "lint": "oxlint -c oxlint.config.mts && tsx scripts/lint-component-structure.mts",
+    "format": "oxfmt --write src/ test/ vitest.config.ts esbuild.webview.mts oxlint.config.mts scripts/",
+    "format:check": "oxfmt --check src/ test/ vitest.config.ts esbuild.webview.mts oxlint.config.mts scripts/",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "release": "tsx scripts/publish.mts"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.2.1",
     "@testing-library/preact": "^3.2.4",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "esbuild": "^0.27.3",
     "eslint-plugin-better-tailwindcss": "^4.3.2",
     "eslint-plugin-no-only-tests": "^3.3.0",
@@ -231,12 +239,10 @@
     "happy-dom": "^20.8.3",
     "oxfmt": "^0.36.0",
     "oxlint": "^1.51.0",
+    "preact": "^10.28.4",
+    "tailwindcss": "^4.2.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.3.0",
     "vitest": "^4.0.18"
-  },
-  "dependencies": {
-    "@tailwindcss/cli": "^4.2.1",
-    "preact": "^10.28.4",
-    "tailwindcss": "^4.2.1"
   }
 }

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "preact/hooks"
 
+import { ClassEntry } from "../../../utils/types"
 import { EmptyState } from "../../components/empty-state/empty-state"
 import { EntryCard } from "../../components/entry-card/entry-card"
-import { ClassEntry } from "../../types"
 
 type PanelMessage =
   | {
@@ -12,7 +12,7 @@ type PanelMessage =
       textareaFocusBackground: string
       type: "config"
     }
-  | { activeIndex: number; entries: Array<ClassEntry>; type: "update" }
+  | { activeIndex: number; entries: ClassEntry[]; type: "update" }
   | { index: number; type: "setActive" }
 
 interface PanelProps {
@@ -20,7 +20,7 @@ interface PanelProps {
 }
 
 export function Panel({ vscode }: PanelProps) {
-  const [entries, setEntries] = useState<Array<ClassEntry>>([])
+  const [entries, setEntries] = useState<ClassEntry[]>([])
   const [activeIndex, setActiveIndex] = useState(-1)
   const [autoScrollPanel, setAutoScrollPanel] = useState(true)
   const hasFocusRef = useRef(false)
@@ -71,8 +71,15 @@ export function Panel({ vscode }: PanelProps) {
       }
     }
     window.addEventListener("message", handler)
-    return () => window.removeEventListener("message", handler)
-  }, [])
+    vscode.postMessage({ type: "ready" })
+    return () => {
+      window.removeEventListener("message", handler)
+      const root = document.documentElement
+      root.style.removeProperty("--ts-element-color")
+      root.style.removeProperty("--ts-active-border-color")
+      root.style.removeProperty("--ts-textarea-focus-bg")
+    }
+  }, [vscode])
 
   if (entries.length === 0) {
     return <EmptyState message="No Tailwind classes detected in the current file." />

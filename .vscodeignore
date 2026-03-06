@@ -5,12 +5,15 @@ src/**
 test/**
 node_modules/**
 .claude/**
+scripts/**
 .gitignore
 tsconfig.json
 vitest.config.ts
 esbuild.webview.mjs
+oxlint.config.mts
 CONTRIBUTING.md
 **/*.ts
+**/*.tsx
 **/*.map
 *.vsix
 .DS_Store

@@ -16,6 +16,16 @@ export default defineConfig({
     },
   },
   test: {
+    coverage: {
+      exclude: ["test/**", "out/**", "scripts/**", "*.config.*", "*.mjs"],
+      provider: "v8",
+      thresholds: {
+        branches: 90,
+        functions: 90,
+        lines: 90,
+        statements: 90,
+      },
+    },
     globals: true,
   },
 })

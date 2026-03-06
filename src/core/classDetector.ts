@@ -3,7 +3,7 @@ import * as vscode from "vscode"
 
 export interface ClassRange {
   /** Individual class names */
-  classes: Array<string>
+  classes: string[]
   /** The nearest enclosing HTML/JSX element tag */
   element: string
   /** Full range of the class string value (inside quotes) */
@@ -16,11 +16,11 @@ export interface ClassRange {
  */
 export function detectClassRanges(
   document: vscode.TextDocument,
-  supportedFunctions: Array<string>,
+  supportedFunctions: string[],
   minClasses: number = 4,
-): Array<ClassRange> {
+): ClassRange[] {
   const text = document.getText()
-  const results: Array<ClassRange> = []
+  const results: ClassRange[] = []
 
   // Pattern 1: HTML-style class/className attributes
   //   class="..." or className="..." or class='...' or className='...'
@@ -43,8 +43,8 @@ export function detectClassRanges(
 
   // Pattern 2: Utility function calls — cn("...", "..."), clsx("..."), etc.
   // Entries starting with "/" are treated as regex patterns (e.g. "/^my.*Classes$/")
-  const literalNames: Array<string> = []
-  const regexPatterns: Array<string> = []
+  const literalNames: string[] = []
+  const regexPatterns: string[] = []
   for (const fn of supportedFunctions) {
     const regexMatch = fn.match(/^\/(.+)\/$/)
     if (regexMatch) {
@@ -60,7 +60,12 @@ export function detectClassRanges(
   if (allPatterns.length === 0) {
     return results
   }
-  const funcPattern = new RegExp(`(${allPatterns.join("|")})\\s*\\(`, "g")
+  let funcPattern: RegExp
+  try {
+    funcPattern = new RegExp(`(${allPatterns.join("|")})\\s*\\(`, "g")
+  } catch {
+    return results
+  }
 
   while ((match = funcPattern.exec(text)) !== null) {
     const funcName = match[1]
@@ -90,7 +95,7 @@ export function detectClassRanges(
 
 function addClassRange(
   document: vscode.TextDocument,
-  results: Array<ClassRange>,
+  results: ClassRange[],
   value: string,
   valueStart: number,
   funcName: null | string,
@@ -127,7 +132,8 @@ function inferElement(
   }
 
   const text = document.getText()
-  const before = text.slice(Math.max(0, offset - 300), offset)
+  const lookback = 500
+  const before = text.slice(Math.max(0, offset - lookback), offset)
 
   const tagPattern = /<([A-Za-z][\w.-]*)/g
   let tagMatch: null | RegExpExecArray
@@ -146,7 +152,7 @@ function inferElement(
  */
 function extractStaticSegments(
   document: vscode.TextDocument,
-  results: Array<ClassRange>,
+  results: ClassRange[],
   value: string,
   valueStart: number,
   minClasses: number,
@@ -207,7 +213,7 @@ function escapeRegex(str: string): string {
   return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)
 }
 
-function deduplicateRanges(ranges: Array<ClassRange>): Array<ClassRange> {
+function deduplicateRanges(ranges: ClassRange[]): ClassRange[] {
   const seen = new Set<string>()
   return ranges.filter((r) => {
     const key = `${r.range.start.line}:${r.range.start.character}-${r.range.end.line}:${r.range.end.character}`

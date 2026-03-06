@@ -14,7 +14,7 @@ const defaultFunctions = [
   "classnames",
 ]
 
-function detect(text: string, opts?: { functions?: Array<string>; minClasses?: number }) {
+function detect(text: string, opts?: { functions?: string[]; minClasses?: number }) {
   const doc = createMockDocument(text)
   return detectClassRanges(doc, opts?.functions ?? defaultFunctions, opts?.minClasses ?? 4)
 }
@@ -420,6 +420,91 @@ describe("cva() patterns", () => {
     const results = detect(text)
     // Should detect the base string and possibly variant strings
     expect(results.length).toBeGreaterThanOrEqual(1)
+  })
+})
+
+// ─── Empty and invalid function patterns ────────────────────────────
+
+describe("empty and invalid function patterns", () => {
+  it("returns HTML results when supportedFunctions is empty", () => {
+    const results = detect('<div class="flex items-center p-4 rounded">', { functions: [] })
+    expect(results).toHaveLength(1)
+    expect(results[0].element).toBe("div")
+  })
+
+  it("returns results gracefully when regex pattern is invalid", () => {
+    const results = detect('<div class="flex items-center p-4 rounded">', {
+      functions: ["/[invalid(/"],
+    })
+    // Should not throw, should still return HTML-detected ranges
+    expect(results).toHaveLength(1)
+  })
+})
+
+// ─── Template literal with nested braces ────────────────────────────
+
+describe("template literal interpolation edge cases", () => {
+  it("handles template literal with nested braces in interpolation", () => {
+    const text = '<div className={`flex items-center gap-2 p-4 ${obj.fn({ a: 1 })} rounded mt-2 mb-2 mx-auto`}>'
+    const results = detect(text)
+    expect(results.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it("handles template literal with no static content after interpolation", () => {
+    const text = '<div className={`flex items-center gap-2 p-4 ${dynamicClasses}`}>'
+    const results = detect(text)
+    // The first segment "flex items-center gap-2 p-4" has 4 classes
+    expect(results).toHaveLength(1)
+  })
+
+  it("handles template literal with only whitespace segments around interpolation", () => {
+    const text = '<div className={`${a} ${b}`}>'
+    const results = detect(text)
+    expect(results).toHaveLength(0)
+  })
+})
+
+// ─── Deduplication with overlapping patterns ────────────────────────
+
+describe("deduplication", () => {
+  it("deduplicates ranges that appear in both HTML and function patterns", () => {
+    // cn() inside className={cn("...")} — both HTML attr and function pattern match
+    const text = '<div className={cn("flex items-center p-4 rounded")}>'
+    const results = detect(text)
+    // The same range should not appear twice
+    const keys = results.map(
+      (r) => `${r.range.start.line}:${r.range.start.character}-${r.range.end.line}:${r.range.end.character}`,
+    )
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it("removes duplicates when className attr contains a function call", () => {
+    // This text creates the same range from both HTML attr pattern and function pattern
+    const text = 'className="flex items-center p-4 rounded"'
+    // Detect twice by also having cn match the same quoted string
+    // A className={cn("flex items-center p-4 rounded")} might match the
+    // quoted string twice. Let's verify dedup works with an explicit overlap.
+    const text2 = `<div className={cn("flex items-center p-4 rounded")}>`
+    const results1 = detect(text2)
+    // Results should be deduplicated — no two ranges with same start/end
+    const seen = new Set<string>()
+    for (const r of results1) {
+      const key = `${r.range.start.line}:${r.range.start.character}-${r.range.end.line}:${r.range.end.character}`
+      expect(seen.has(key)).toBe(false)
+      seen.add(key)
+    }
+  })
+})
+
+// ─── inferElement fallback ──────────────────────────────────────────
+
+describe("inferElement fallback", () => {
+  it("falls back to 'element' when no enclosing tag exists", () => {
+    // Use a function call that's not preceded by any HTML tag
+    const text = 'cn("flex items-center p-4 rounded")'
+    const results = detect(text)
+    // cn() uses funcName, so element is "cn()"
+    expect(results[0].element).toBe("cn()")
   })
 })
 

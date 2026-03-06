@@ -82,6 +82,34 @@ describe("ClassEditor", () => {
     expect(onChange).toHaveBeenCalledWith("flex p-4")
   })
 
+  it("clears pending debounce on unmount", () => {
+    const onChange = vi.fn()
+    const { container, unmount } = render(
+      <ClassEditor classes={["flex"]} debounceMs={500} onChange={onChange} />,
+    )
+    const textarea = container.querySelector("textarea")!
+
+    textarea.value = "flex\np-4"
+    fireEvent.input(textarea)
+
+    // Unmount before debounce fires
+    unmount()
+    vi.advanceTimersByTime(600)
+
+    // onChange should not have been called after unmount
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it("calls onFocus callback when textarea is focused", () => {
+    const onFocus = vi.fn()
+    const { container } = render(
+      <ClassEditor classes={["flex"]} onChange={() => {}} onFocus={onFocus} />,
+    )
+    const textarea = container.querySelector("textarea")!
+    fireEvent.focus(textarea)
+    expect(onFocus).toHaveBeenCalledOnce()
+  })
+
   it("uses default debounceMs of 500", () => {
     const onChange = vi.fn()
     const { container } = render(<ClassEditor classes={[]} onChange={onChange} />)

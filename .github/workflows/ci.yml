@@ -7,12 +7,35 @@ on:
     branches: [master]
 
 jobs:
+  branch-name:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch name
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          PATTERN="^(feat|fix|refactor|docs|chore|test)/[a-z0-9._-]+$"
+          if [[ ! "$BRANCH" =~ $PATTERN ]]; then
+            echo "::error::Branch name '$BRANCH' does not match the required pattern."
+            echo ""
+            echo "Use one of these prefixes:"
+            echo "  feat/     - new feature"
+            echo "  fix/      - bug fix"
+            echo "  refactor/ - code refactoring"
+            echo "  docs/     - documentation"
+            echo "  chore/    - maintenance, dependencies, CI"
+            echo "  test/     - adding or updating tests"
+            echo ""
+            echo "Examples: feat/class-sorting, fix/collapse-multiline, release/0.2.0"
+            exit 1
+          fi
+
   build:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22]
 
     steps:
       - uses: actions/checkout@v4
@@ -23,10 +46,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - run: npm ci
+        env:
+          CI: true
 
       - run: npm run format:check
 
       - run: npm run lint
+
+      - run: npm run typecheck
 
       - run: npm run compile
 

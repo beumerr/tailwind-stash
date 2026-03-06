@@ -1,22 +1,21 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { _reset, createMockEditor, window } from "../__mocks__/vscode"
+import { _fireEvent, _reset, createMockEditor, window, workspace } from "../__mocks__/vscode"
 import { FoldingManager } from "../../src/core/foldingProvider"
-
-function makeContext() {
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  return { subscriptions: [] } as any
-}
 
 function createManager(editorText?: string, opts?: { cursorLine?: number }) {
   const editor = editorText ? createMockEditor(editorText, opts) : undefined
   window.activeTextEditor = editor
-  const manager = new FoldingManager(makeContext())
+  const manager = new FoldingManager()
   return { editor, manager }
 }
 
 beforeEach(() => {
   _reset()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 // ─── Construction ───────────────────────────────────────────────────
@@ -31,8 +30,7 @@ describe("construction", () => {
   })
 
   it("defaults to enabled (foldByDefault is true)", () => {
-    const { editor, manager } = createManager('<div class="flex items-center p-4 rounded">')
-    // Should have applied decorations since it's enabled by default
+    const { editor } = createManager('<div class="flex items-center p-4 rounded">')
     expect(editor!._decorationCalls.length).toBeGreaterThan(0)
   })
 })
@@ -42,11 +40,10 @@ describe("construction", () => {
 describe("toggle", () => {
   it("disables when toggled from default enabled state", () => {
     const { editor, manager } = createManager('<div class="flex items-center p-4 rounded">')
-    editor!._decorationCalls.length = 0 // clear initial calls
+    editor!._decorationCalls.splice(0)
 
-    manager.toggle() // enabled -> disabled
+    manager.toggle()
 
-    // When disabled, decorations should be cleared (empty arrays)
     const lastCalls = editor!._decorationCalls
     expect(lastCalls.length).toBeGreaterThan(0)
     expect(lastCalls.every((c) => c.decorations.length === 0)).toBe(true)
@@ -57,11 +54,10 @@ describe("toggle", () => {
 <span class="flex items-center p-4 rounded">`
     const { editor, manager } = createManager(text, { cursorLine: 0 })
 
-    manager.toggle() // disable
-    editor!._decorationCalls.length = 0
-    manager.toggle() // re-enable
+    manager.toggle()
+    editor!._decorationCalls.splice(0)
+    manager.toggle()
 
-    // Should have applied decorations again
     const hasDecorations = editor!._decorationCalls.some((c) => c.decorations.length > 0)
     expect(hasDecorations).toBe(true)
   })
@@ -72,7 +68,7 @@ describe("toggle", () => {
 describe("setEnabled", () => {
   it("clears decorations when disabled", () => {
     const { editor, manager } = createManager('<div class="flex items-center p-4 rounded">')
-    editor!._decorationCalls.length = 0
+    editor!._decorationCalls.splice(0)
 
     manager.setEnabled(false)
 
@@ -84,7 +80,7 @@ describe("setEnabled", () => {
 <span class="flex items-center p-4 rounded">`
     const { editor, manager } = createManager(text, { cursorLine: 0 })
     manager.setEnabled(false)
-    editor!._decorationCalls.length = 0
+    editor!._decorationCalls.splice(0)
 
     manager.setEnabled(true)
 
@@ -128,11 +124,8 @@ describe("getClassRanges", () => {
 describe("cursor line exclusion", () => {
   it("excludes range on the cursor line from decorations", () => {
     const text = '<div class="flex items-center p-4 rounded">'
-    // Cursor on line 0 where the class attribute is
     const { editor } = createManager(text, { cursorLine: 0 })
 
-    // The hide decorations (second call per update) should be empty
-    // because the cursor is on the same line as the class
     const hideCalls = editor!._decorationCalls.filter((c) => c.decorations.length === 0)
     expect(hideCalls.length).toBeGreaterThan(0)
   })
@@ -141,7 +134,6 @@ describe("cursor line exclusion", () => {
     const text = `<div class="flex items-center p-4 rounded">
 <span>spacer</span>
 <p class="text-sm font-bold text-red-500 mt-2">`
-    // Cursor on line 1 (spacer), so both class lines should be decorated
     const { editor } = createManager(text, { cursorLine: 1 })
 
     const hasDecorations = editor!._decorationCalls.some((c) => c.decorations.length > 0)
@@ -161,8 +153,226 @@ describe("updateDecorations", () => {
 <span class="flex items-center p-4 rounded">`
     const { editor } = createManager(text, { cursorLine: 0 })
 
-    // Should have at least 2 setDecorations calls (placeholder + hide)
     expect(editor!._decorationCalls.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it("generates placeholder with class count by default", () => {
+    const text = `<div>
+<span class="flex items-center p-4 rounded">`
+    const { editor } = createManager(text, { cursorLine: 0 })
+
+    const placeholderCall = editor!._decorationCalls.find(
+      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+    )
+    expect(placeholderCall).toBeDefined()
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const decoration = placeholderCall!.decorations[0] as any
+    expect(decoration.renderOptions.before.contentText).toBe("4")
+  })
+
+  it("generates 'count-long' placeholder with label", () => {
+    const origGet = workspace.getConfiguration
+    workspace.getConfiguration = (_section?: string) => ({
+      get<T>(key: string, defaultValue: T): T {
+        if (key === "placeholderStyle") { return "count-long" as T }
+        return defaultValue
+      },
+    })
+
+    const text = `<div>
+<span class="flex items-center p-4 rounded">`
+    const { editor } = createManager(text, { cursorLine: 0 })
+
+    const placeholderCall = editor!._decorationCalls.find(
+      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+    )
+    expect(placeholderCall).toBeDefined()
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const decoration = placeholderCall!.decorations[0] as any
+    expect(decoration.renderOptions.before.contentText).toBe("4 classes")
+
+    workspace.getConfiguration = origGet
+  })
+
+  it("generates 'empty' placeholder with ellipsis", () => {
+    const origGet = workspace.getConfiguration
+    workspace.getConfiguration = (_section?: string) => ({
+      get<T>(key: string, defaultValue: T): T {
+        if (key === "placeholderStyle") { return "empty" as T }
+        return defaultValue
+      },
+    })
+
+    const text = `<div>
+<span class="flex items-center p-4 rounded">`
+    const { editor } = createManager(text, { cursorLine: 0 })
+
+    const placeholderCall = editor!._decorationCalls.find(
+      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+    )
+    expect(placeholderCall).toBeDefined()
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const decoration = placeholderCall!.decorations[0] as any
+    expect(decoration.renderOptions.before.contentText).toBe("…")
+
+    workspace.getConfiguration = origGet
+  })
+
+  it("falls back to count for unknown placeholder style", () => {
+    const origGet = workspace.getConfiguration
+    workspace.getConfiguration = (_section?: string) => ({
+      get<T>(key: string, defaultValue: T): T {
+        if (key === "placeholderStyle") { return "unknown-style" as T }
+        return defaultValue
+      },
+    })
+
+    const text = `<div>
+<span class="flex items-center p-4 rounded">`
+    const { editor } = createManager(text, { cursorLine: 0 })
+
+    const placeholderCall = editor!._decorationCalls.find(
+      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+    )
+    expect(placeholderCall).toBeDefined()
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const decoration = placeholderCall!.decorations[0] as any
+    expect(decoration.renderOptions.before.contentText).toBe("4")
+
+    workspace.getConfiguration = origGet
+  })
+
+  it("generates 'count-long' singular for 1 class", () => {
+    const origGet = workspace.getConfiguration
+    workspace.getConfiguration = (_section?: string) => ({
+      get<T>(key: string, defaultValue: T): T {
+        if (key === "placeholderStyle") { return "count-long" as T }
+        if (key === "minClassCount") { return 1 as T }
+        return defaultValue
+      },
+    })
+
+    const text = `<div>
+<span class="flex">`
+    const { editor } = createManager(text, { cursorLine: 0 })
+
+    const placeholderCall = editor!._decorationCalls.find(
+      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+    )
+    expect(placeholderCall).toBeDefined()
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const decoration = placeholderCall!.decorations[0] as any
+    expect(decoration.renderOptions.before.contentText).toBe("1 class")
+
+    workspace.getConfiguration = origGet
+  })
+
+  it("includes hover message with class list", () => {
+    const text = `<div>
+<span class="flex items-center p-4 rounded">`
+    const { editor } = createManager(text, { cursorLine: 0 })
+
+    const placeholderCall = editor!._decorationCalls.find(
+      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).hoverMessage,
+    )
+    expect(placeholderCall).toBeDefined()
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const decoration = placeholderCall!.decorations[0] as any
+    expect(decoration.hoverMessage.value).toContain("flex")
+    expect(decoration.hoverMessage.value).toContain("rounded")
+  })
+})
+
+// ─── Event handlers ─────────────────────────────────────────────────
+
+describe("event handlers", () => {
+  it("updates decorations when active editor changes", () => {
+    const { manager } = createManager()
+    const newEditor = createMockEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 1 },
+    )
+    window.activeTextEditor = newEditor
+
+    _fireEvent("onDidChangeActiveTextEditor", newEditor)
+
+    const hasDecorations = newEditor._decorationCalls.some((c) => c.decorations.length > 0)
+    expect(hasDecorations).toBe(true)
+  })
+
+  it("debounces text document changes", () => {
+    vi.useFakeTimers()
+    const { editor } = createManager('<div class="flex items-center p-4 rounded">')
+    editor!._decorationCalls.splice(0)
+
+    _fireEvent("onDidChangeTextDocument", { document: editor!.document })
+    // Should not have updated yet
+    expect(editor!._decorationCalls).toHaveLength(0)
+
+    vi.advanceTimersByTime(200)
+    // Should have updated after debounce
+    expect(editor!._decorationCalls.length).toBeGreaterThan(0)
+  })
+
+  it("debounces selection changes", () => {
+    vi.useFakeTimers()
+    const { editor } = createManager('<div class="flex items-center p-4 rounded">')
+    editor!._decorationCalls.splice(0)
+
+    _fireEvent("onDidChangeTextEditorSelection", {
+      selections: [{ active: { line: 5 } }],
+      textEditor: editor,
+    })
+    // Should not have updated yet
+    expect(editor!._decorationCalls).toHaveLength(0)
+
+    vi.advanceTimersByTime(200)
+    expect(editor!._decorationCalls.length).toBeGreaterThan(0)
+  })
+
+  it("skips selection update when cursor stays on the same line", () => {
+    vi.useFakeTimers()
+    const { editor } = createManager('<div class="flex items-center p-4 rounded">')
+
+    // Fire first selection change
+    _fireEvent("onDidChangeTextEditorSelection", {
+      selections: [{ active: { line: 5 } }],
+      textEditor: editor,
+    })
+    vi.advanceTimersByTime(200)
+    editor!._decorationCalls.splice(0)
+
+    // Fire same line again
+    _fireEvent("onDidChangeTextEditorSelection", {
+      selections: [{ active: { line: 5 } }],
+      textEditor: editor,
+    })
+    vi.advanceTimersByTime(200)
+
+    // Should not have re-rendered
+    expect(editor!._decorationCalls).toHaveLength(0)
+  })
+
+  it("updates when config changes", () => {
+    const { editor } = createManager('<div class="flex items-center p-4 rounded">')
+    editor!._decorationCalls.splice(0)
+
+    _fireEvent("onDidChangeConfiguration", {
+      affectsConfiguration: (section: string) => section === "tailwindStash",
+    })
+
+    expect(editor!._decorationCalls.length).toBeGreaterThan(0)
+  })
+
+  it("ignores config changes for other sections", () => {
+    const { editor } = createManager('<div class="flex items-center p-4 rounded">')
+    editor!._decorationCalls.splice(0)
+
+    _fireEvent("onDidChangeConfiguration", {
+      affectsConfiguration: (section: string) => section === "someOtherExtension",
+    })
+
+    expect(editor!._decorationCalls).toHaveLength(0)
   })
 })
 
@@ -177,5 +387,19 @@ describe("dispose", () => {
   it("can be called when no editor was active", () => {
     const { manager } = createManager()
     expect(() => manager.dispose()).not.toThrow()
+  })
+
+  it("clears pending debounce timers", () => {
+    vi.useFakeTimers()
+    const { editor, manager } = createManager('<div class="flex items-center p-4 rounded">')
+
+    // Trigger a debounced event
+    _fireEvent("onDidChangeTextDocument", { document: editor!.document })
+
+    // Dispose before the debounce fires
+    manager.dispose()
+
+    // Advance past debounce — should not throw
+    expect(() => vi.advanceTimersByTime(200)).not.toThrow()
   })
 })

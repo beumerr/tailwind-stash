@@ -8,7 +8,7 @@ const projectRoot = path.resolve(__dirname, "../..")
 
 function makeContext() {
   // oxlint-ignore-next-line
-  const subscriptions: Array<unknown> = []
+  const subscriptions: unknown[] = []
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   return { extensionPath: projectRoot, subscriptions } as any
 }
@@ -41,7 +41,17 @@ describe("activate", () => {
     expect(_getCommandHandler("tailwindStash.showCssPreview")).toBeDefined()
   })
 
-  it("registers exactly 4 commands", () => {
+  it("registers the hideCssPreview command", () => {
+    activate(makeContext())
+    expect(_getCommandHandler("tailwindStash.hideCssPreview")).toBeDefined()
+  })
+
+  it("registers the toggleCssPreview command", () => {
+    activate(makeContext())
+    expect(_getCommandHandler("tailwindStash.toggleCssPreview")).toBeDefined()
+  })
+
+  it("registers all 6 commands", () => {
     const ctx = makeContext()
     activate(ctx)
     const commands = [
@@ -49,6 +59,8 @@ describe("activate", () => {
       "tailwindStash.expandAll",
       "tailwindStash.toggleCollapse",
       "tailwindStash.showCssPreview",
+      "tailwindStash.hideCssPreview",
+      "tailwindStash.toggleCssPreview",
     ]
     for (const cmd of commands) {
       expect(_getCommandHandler(cmd)).toBeDefined()
@@ -58,8 +70,8 @@ describe("activate", () => {
   it("pushes subscriptions onto the context", () => {
     const ctx = makeContext()
     activate(ctx)
-    // 4 commands + 1 foldingManager
-    expect(ctx.subscriptions.length).toBeGreaterThanOrEqual(5)
+    // 6 commands + 1 foldingManager
+    expect(ctx.subscriptions.length).toBeGreaterThanOrEqual(7)
   })
 })
 
@@ -84,6 +96,16 @@ describe("command handlers", () => {
   it("showCssPreview does not throw", () => {
     activate(makeContext())
     expect(() => _getCommandHandler("tailwindStash.showCssPreview")!()).not.toThrow()
+  })
+
+  it("hideCssPreview does not throw", () => {
+    activate(makeContext())
+    expect(() => _getCommandHandler("tailwindStash.hideCssPreview")!()).not.toThrow()
+  })
+
+  it("toggleCssPreview does not throw", () => {
+    activate(makeContext())
+    expect(() => _getCommandHandler("tailwindStash.toggleCssPreview")!()).not.toThrow()
   })
 })
 

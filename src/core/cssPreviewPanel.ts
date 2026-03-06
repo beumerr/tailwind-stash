@@ -3,6 +3,7 @@ import { join } from "node:path"
 // eslint-disable-next-line import/no-namespace -- vscode SDK requires namespace import
 import * as vscode from "vscode"
 
+import { debounce, generateNonce } from "../utils/utils"
 import { ClassRange } from "./classDetector"
 
 export class CSSPreviewPanel {
@@ -11,21 +12,23 @@ export class CSSPreviewPanel {
 
   private readonly panel: vscode.WebviewPanel
   private readonly extensionPath: string
-  private disposables: Array<vscode.Disposable> = []
-  private getClassRanges: (uri: string) => Array<ClassRange>
-  private currentRanges: Array<ClassRange> = []
+  private disposables: vscode.Disposable[] = []
+  private getClassRanges: (uri: string) => ClassRange[]
+  private currentRanges: ClassRange[] = []
   private currentEditorUri: string = ""
   private lastContentKey: string = ""
   private lastActiveIndex: number = -1
+  private textChangeDebounce: { cancel: () => void; fn: (editor: vscode.TextEditor) => void }
 
   private constructor(
     panel: vscode.WebviewPanel,
     extensionPath: string,
-    getClassRanges: (uri: string) => Array<ClassRange>,
+    getClassRanges: (uri: string) => ClassRange[],
   ) {
     this.panel = panel
     this.extensionPath = extensionPath
     this.getClassRanges = getClassRanges
+    this.textChangeDebounce = debounce((editor: vscode.TextEditor) => this.updateForEditor(editor), 150)
 
     this.panel.webview.html = this.getHtml()
     this.sendConfig()
@@ -54,7 +57,7 @@ export class CSSPreviewPanel {
         const editor = vscode.window.activeTextEditor
         if (editor && e.document === editor.document) {
           this.lastContentKey = ""
-          setTimeout(() => this.updateForEditor(editor), 150)
+          this.textChangeDebounce.fn(editor)
         }
       }),
     )
@@ -71,7 +74,7 @@ export class CSSPreviewPanel {
     }
   }
 
-  static toggle(extensionPath: string, getClassRanges: (uri: string) => Array<ClassRange>) {
+  static toggle(extensionPath: string, getClassRanges: (uri: string) => ClassRange[]) {
     if (CSSPreviewPanel.currentPanel) {
       CSSPreviewPanel.currentPanel.dispose()
     } else {
@@ -79,7 +82,7 @@ export class CSSPreviewPanel {
     }
   }
 
-  static createOrShow(extensionPath: string, getClassRanges: (uri: string) => Array<ClassRange>) {
+  static createOrShow(extensionPath: string, getClassRanges: (uri: string) => ClassRange[]) {
     const column = vscode.ViewColumn.Beside
 
     if (CSSPreviewPanel.currentPanel) {
@@ -91,7 +94,10 @@ export class CSSPreviewPanel {
       CSSPreviewPanel.viewType,
       "Tailwind Classes",
       column,
-      { enableScripts: true },
+      {
+        enableScripts: true,
+        localResourceRoots: [],
+      },
     )
 
     CSSPreviewPanel.currentPanel = new CSSPreviewPanel(panel, extensionPath, getClassRanges)
@@ -126,7 +132,7 @@ export class CSSPreviewPanel {
       if (scrollEditor) {
         editor.revealRange(cr.range, vscode.TextEditorRevealType.InCenter)
       }
-      this.lastActiveIndex = msg.index!
+      this.lastActiveIndex = msg.index
       this.panel.webview.postMessage({ index: msg.index, type: "setActive" })
     }
   }
@@ -180,12 +186,17 @@ export class CSSPreviewPanel {
     const html = readFileSync(htmlPath, "utf8")
     const js = readFileSync(jsPath, "utf8")
     const css = readFileSync(cssPath, "utf8")
+    const nonce = generateNonce()
 
-    return html.replace("{{CSS}}", css).replace("{{JS}}", js)
+    return html
+      .replaceAll("{{NONCE}}", nonce)
+      .replace("{{CSS}}", css)
+      .replace("{{JS}}", js)
   }
 
   dispose() {
     CSSPreviewPanel.currentPanel = undefined
+    this.textChangeDebounce.cancel()
     this.panel.dispose()
     this.disposables.forEach((d) => d.dispose())
   }
@@ -193,7 +204,7 @@ export class CSSPreviewPanel {
 
 export function findActiveIndex(
   cursorLine: number,
-  ranges: Array<{ range: { end: { line: number }; start: { line: number } } }>,
+  ranges: { range: { end: { line: number }; start: { line: number } } }[],
 ): number {
   let activeIndex = -1
   let nearestDist = Infinity

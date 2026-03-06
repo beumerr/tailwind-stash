@@ -5,7 +5,7 @@ import { CSSPreviewPanel } from "./core/cssPreviewPanel"
 import { FoldingManager } from "./core/foldingProvider"
 
 export function activate(context: vscode.ExtensionContext) {
-  const foldingManager = new FoldingManager(context)
+  const foldingManager = new FoldingManager()
 
   context.subscriptions.push(
     vscode.commands.registerCommand("tailwindStash.collapseAll", () => {

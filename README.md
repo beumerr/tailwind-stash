@@ -68,15 +68,6 @@ This list is fully configurable via the `tailwindStash.supportedFunctions` setti
 | `tailwindStash.extraLanguages` | `[]` | (Experimental) Additional language IDs to enable collapsing for. Requires reload. |
 | `tailwindStash.supportedFunctions` | `["cn", "clsx", ...]` | Function names (or `/regex/` patterns) that wrap Tailwind classes |
 
-## Development
+## Contributing
 
-```bash
-npm install
-npm run format    # format with oxfmt
-npm run lint      # lint with oxlint
-npm run compile
-npm test
-npm run watch     # auto-recompile on changes
-```
-
-Press `F5` in VS Code to launch the Extension Development Host for manual testing.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, architecture overview, and development guidelines.

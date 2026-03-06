@@ -1,12 +1,13 @@
-import { build, context } from "esbuild"
+import { build, context, type BuildOptions } from "esbuild"
 import { spawn } from "node:child_process"
 import { copyFileSync } from "node:fs"
 
 const isWatch = process.argv.includes("--watch")
 
-const jsOptions = {
+const jsOptions: BuildOptions = {
   bundle: true,
   entryPoints: ["src/webview/index.tsx"],
+  external: ["node:*"],
   format: "iife",
   jsx: "automatic",
   jsxImportSource: "preact",
@@ -27,11 +28,21 @@ if (isWatch) {
   // oxlint-disable-next-line no-console
   console.log("Watching webview...")
 } else {
-  spawn("npx", ["@tailwindcss/cli", ...tailwindArgs, "--minify"], {
-    shell: true,
-    stdio: "inherit",
+  const cssBuild = new Promise<void>((resolve, reject) => {
+    const proc = spawn("npx", ["@tailwindcss/cli", ...tailwindArgs, "--minify"], {
+      shell: true,
+      stdio: "inherit",
+    })
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`Tailwind CSS build failed with exit code ${code}`))
+      } else {
+        resolve()
+      }
+    })
+    proc.on("error", reject)
   })
-  await build(jsOptions)
+  await Promise.all([cssBuild, build(jsOptions)])
 }
 
 copyFileSync("src/webview/index.html", "out/webview.html")

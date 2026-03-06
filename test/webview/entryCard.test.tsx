@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
-import { cleanup, render } from "@testing-library/preact"
+import { cleanup, fireEvent, render, screen } from "@testing-library/preact"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import type { ClassEntry } from "../../src/webview/types"
+import type { ClassEntry } from "../../src/utils/types"
 
 import { EntryCard } from "../../src/webview/components/entry-card/entry-card"
+import { EntryCardHeader } from "../../src/webview/components/entry-card/entry-card-header"
 
 const entry: ClassEntry = {
   classes: ["flex", "items-center", "gap-2", "p-4"],
@@ -14,11 +15,32 @@ const entry: ClassEntry = {
 
 afterEach(cleanup)
 
+describe("EntryCardHeader", () => {
+  it("renders element name, line number, and class count", () => {
+    render(<EntryCardHeader count={4} element="div" line={10} onClick={() => {}} />)
+    expect(screen.getByText("div")).toBeTruthy()
+    expect(screen.getByText("10")).toBeTruthy()
+    expect(screen.getByText("4 classes")).toBeTruthy()
+  })
+
+  it("calls onClick when clicked", () => {
+    const onClick = vi.fn()
+    render(<EntryCardHeader count={4} element="div" line={10} onClick={onClick} />)
+    fireEvent.click(screen.getByText("div"))
+    expect(onClick).toHaveBeenCalledOnce()
+  })
+
+  it("renders singular 'class' when count is 1", () => {
+    render(<EntryCardHeader count={1} element="span" line={5} onClick={() => {}} />)
+    expect(screen.getByText("1 class")).toBeTruthy()
+  })
+})
+
 describe("EntryCard", () => {
   it("renders element name, line number, and class count", () => {
-    const { container } = render(
+    render(
       <EntryCard
-        autoScroll={true}
+        autoScroll
         entry={entry}
         isActive={false}
         onGoToRange={() => {}}
@@ -26,31 +48,29 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    expect(container.querySelector("[data-testid='element']")!.textContent).toBe("div")
-    expect(container.querySelector("[data-testid='line']")!.textContent).toBe("10")
-    expect(container.querySelector("[data-testid='count']")!.textContent).toBe("4 classes")
+    expect(screen.getByText("div")).toBeTruthy()
+    expect(screen.getByText("10")).toBeTruthy()
+    expect(screen.getByText("4 classes")).toBeTruthy()
   })
 
   it("applies active state when isActive is true", () => {
-    const { container } = render(
+    render(
       <EntryCard
-        autoScroll={true}
+        autoScroll
         entry={entry}
-        isActive={true}
+        isActive
         onGoToRange={() => {}}
         onSelect={() => {}}
         onUpdateClasses={() => {}}
       />,
     )
-    expect(container.querySelector("[data-testid='entry-card']")!.hasAttribute("data-active")).toBe(
-      true,
-    )
+    expect(screen.getByRole("article").hasAttribute("data-active")).toBe(true)
   })
 
   it("does not apply active state when isActive is false", () => {
-    const { container } = render(
+    render(
       <EntryCard
-        autoScroll={true}
+        autoScroll
         entry={entry}
         isActive={false}
         onGoToRange={() => {}}
@@ -58,15 +78,14 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    expect(container.querySelector("[data-testid='entry-card']")!.hasAttribute("data-active")).toBe(
-      false,
-    )
+    expect(screen.getByRole("article").hasAttribute("data-active")).toBe(false)
   })
 
   it("calls onGoToRange when header is clicked", () => {
     const onGoToRange = vi.fn()
-    const { container } = render(
+    render(
       <EntryCard
+        autoScroll={false}
         entry={entry}
         isActive={false}
         onGoToRange={onGoToRange}
@@ -74,16 +93,15 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    container
-      .querySelector("[data-testid='header']")!
-      .dispatchEvent(new MouseEvent("click", { bubbles: true }))
+    fireEvent.click(screen.getByText("div"))
     expect(onGoToRange).toHaveBeenCalledOnce()
   })
 
   it("calls onSelect when textarea is focused", () => {
     const onSelect = vi.fn()
-    const { container } = render(
+    render(
       <EntryCard
+        autoScroll={false}
         entry={entry}
         isActive={false}
         onGoToRange={() => {}}
@@ -91,7 +109,7 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    container.querySelector("textarea")!.dispatchEvent(new FocusEvent("focus", { bubbles: true }))
+    fireEvent.focus(screen.getByRole("textbox"))
     expect(onSelect).toHaveBeenCalledOnce()
   })
 
@@ -99,7 +117,7 @@ describe("EntryCard", () => {
     const scrollIntoView = vi.fn()
     const { container } = render(
       <EntryCard
-        autoScroll={true}
+        autoScroll
         entry={entry}
         isActive={false}
         onGoToRange={() => {}}
@@ -107,14 +125,14 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    const card = container.querySelector("[data-testid='entry-card']")!
+    const card = screen.getByRole("article")
     card.scrollIntoView = scrollIntoView
 
     render(
       <EntryCard
-        autoScroll={true}
+        autoScroll
         entry={entry}
-        isActive={true}
+        isActive
         onGoToRange={() => {}}
         onSelect={() => {}}
         onUpdateClasses={() => {}}
@@ -137,14 +155,14 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    const card = container.querySelector("[data-testid='entry-card']")!
+    const card = screen.getByRole("article")
     card.scrollIntoView = scrollIntoView
 
     render(
       <EntryCard
         autoScroll={false}
         entry={entry}
-        isActive={true}
+        isActive
         onGoToRange={() => {}}
         onSelect={() => {}}
         onUpdateClasses={() => {}}
@@ -156,9 +174,9 @@ describe("EntryCard", () => {
   })
 
   it("renders a ClassEditor with the entry classes", () => {
-    const { container } = render(
+    render(
       <EntryCard
-        autoScroll={true}
+        autoScroll
         entry={entry}
         isActive={false}
         onGoToRange={() => {}}
@@ -166,7 +184,6 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    const textarea = container.querySelector("textarea")!
-    expect(textarea.value).toBe("flex\nitems-center\ngap-2\np-4")
+    expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe("flex\nitems-center\ngap-2\np-4")
   })
 })

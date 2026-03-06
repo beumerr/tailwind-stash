@@ -1,0 +1,52 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Verify tag matches package.json version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "$PKG_VERSION" ]; then
+            echo "Tag v$TAG does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
+
+      - name: Verify changelog has entry for this version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if ! grep -q "## \[$VERSION\]" CHANGELOG.md; then
+            echo "CHANGELOG.md has no entry for [$VERSION]"
+            exit 1
+          fi
+
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run compile
+      - run: npm test
+
+      - name: Publish to VS Code Marketplace
+        run: npx @vscode/vsce publish --no-update-package-json
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX
+        run: npx ovsx publish --no-update-package-json
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        if: ${{ env.OVSX_PAT != '' }}
+        continue-on-error: true
