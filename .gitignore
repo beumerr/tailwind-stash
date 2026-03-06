@@ -2,7 +2,12 @@ out/
 node_modules/
 .vscode-test/
 *.vsix
+*.tgz
 .DS_Store
+.env
+.env.*
+coverage/
 oxlint.config.mjs
 oxlint.config.mjs.map
 .claude/
+meta.json
