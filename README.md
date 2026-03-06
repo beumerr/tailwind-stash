@@ -73,6 +73,8 @@ This list is fully configurable via the `tailwindStash.supportedFunctions` setti
 ```bash
 npm install
 npm run compile
+npm test
+npm run watch     # auto-recompile on changes
 ```
 
-Press `F5` in VS Code to launch the Extension Development Host for testing.
+Press `F5` in VS Code to launch the Extension Development Host for manual testing.
