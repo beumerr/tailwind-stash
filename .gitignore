@@ -3,4 +3,6 @@ node_modules/
 .vscode-test/
 *.vsix
 .DS_Store
+oxlint.config.mjs
+oxlint.config.mjs.map
 .claude/

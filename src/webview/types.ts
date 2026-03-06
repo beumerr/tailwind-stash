@@ -1,5 +1,5 @@
 export interface ClassEntry {
-  element: string;
-  line: number;
-  classes: string[];
+  classes: Array<string>
+  element: string
+  line: number
 }

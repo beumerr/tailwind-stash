@@ -1,97 +1,100 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import path from 'path';
-import { _reset, _getCommandHandler, window } from '../__mocks__/vscode';
-import { activate, deactivate } from '../../src/extension';
+import path from "node:path"
+import { describe, it, expect, beforeEach } from "vitest"
 
-const projectRoot = path.resolve(__dirname, '../..');
+import { _reset, _getCommandHandler, window } from "../__mocks__/vscode"
+import { activate, deactivate } from "../../src/extension"
+
+const projectRoot = path.resolve(__dirname, "../..")
 
 function makeContext() {
-  const subscriptions: any[] = [];
-  return { subscriptions, extensionPath: projectRoot } as any;
+  // oxlint-ignore-next-line
+  const subscriptions: Array<unknown> = []
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  return { extensionPath: projectRoot, subscriptions } as any
 }
 
 beforeEach(() => {
-  _reset();
-  window.activeTextEditor = undefined;
-});
+  _reset()
+  window.activeTextEditor = undefined
+})
 
 // ─── activate ───────────────────────────────────────────────────────
 
-describe('activate', () => {
-  it('registers the collapseAll command', () => {
-    activate(makeContext());
-    expect(_getCommandHandler('tailwindStash.collapseAll')).toBeDefined();
-  });
+describe("activate", () => {
+  it("registers the collapseAll command", () => {
+    activate(makeContext())
+    expect(_getCommandHandler("tailwindStash.collapseAll")).toBeDefined()
+  })
 
-  it('registers the expandAll command', () => {
-    activate(makeContext());
-    expect(_getCommandHandler('tailwindStash.expandAll')).toBeDefined();
-  });
+  it("registers the expandAll command", () => {
+    activate(makeContext())
+    expect(_getCommandHandler("tailwindStash.expandAll")).toBeDefined()
+  })
 
-  it('registers the toggleCollapse command', () => {
-    activate(makeContext());
-    expect(_getCommandHandler('tailwindStash.toggleCollapse')).toBeDefined();
-  });
+  it("registers the toggleCollapse command", () => {
+    activate(makeContext())
+    expect(_getCommandHandler("tailwindStash.toggleCollapse")).toBeDefined()
+  })
 
-  it('registers the showCssPreview command', () => {
-    activate(makeContext());
-    expect(_getCommandHandler('tailwindStash.showCssPreview')).toBeDefined();
-  });
+  it("registers the showCssPreview command", () => {
+    activate(makeContext())
+    expect(_getCommandHandler("tailwindStash.showCssPreview")).toBeDefined()
+  })
 
-  it('registers exactly 4 commands', () => {
-    const ctx = makeContext();
-    activate(ctx);
+  it("registers exactly 4 commands", () => {
+    const ctx = makeContext()
+    activate(ctx)
     const commands = [
-      'tailwindStash.collapseAll',
-      'tailwindStash.expandAll',
-      'tailwindStash.toggleCollapse',
-      'tailwindStash.showCssPreview',
-    ];
+      "tailwindStash.collapseAll",
+      "tailwindStash.expandAll",
+      "tailwindStash.toggleCollapse",
+      "tailwindStash.showCssPreview",
+    ]
     for (const cmd of commands) {
-      expect(_getCommandHandler(cmd)).toBeDefined();
+      expect(_getCommandHandler(cmd)).toBeDefined()
     }
-  });
+  })
 
-  it('pushes subscriptions onto the context', () => {
-    const ctx = makeContext();
-    activate(ctx);
+  it("pushes subscriptions onto the context", () => {
+    const ctx = makeContext()
+    activate(ctx)
     // 4 commands + 1 foldingManager
-    expect(ctx.subscriptions.length).toBeGreaterThanOrEqual(5);
-  });
-});
+    expect(ctx.subscriptions.length).toBeGreaterThanOrEqual(5)
+  })
+})
 
 // ─── command handlers ───────────────────────────────────────────────
 
-describe('command handlers', () => {
-  it('collapseAll does not throw', () => {
-    activate(makeContext());
-    expect(() => _getCommandHandler('tailwindStash.collapseAll')!()).not.toThrow();
-  });
+describe("command handlers", () => {
+  it("collapseAll does not throw", () => {
+    activate(makeContext())
+    expect(() => _getCommandHandler("tailwindStash.collapseAll")!()).not.toThrow()
+  })
 
-  it('expandAll does not throw', () => {
-    activate(makeContext());
-    expect(() => _getCommandHandler('tailwindStash.expandAll')!()).not.toThrow();
-  });
+  it("expandAll does not throw", () => {
+    activate(makeContext())
+    expect(() => _getCommandHandler("tailwindStash.expandAll")!()).not.toThrow()
+  })
 
-  it('toggleCollapse does not throw', () => {
-    activate(makeContext());
-    expect(() => _getCommandHandler('tailwindStash.toggleCollapse')!()).not.toThrow();
-  });
+  it("toggleCollapse does not throw", () => {
+    activate(makeContext())
+    expect(() => _getCommandHandler("tailwindStash.toggleCollapse")!()).not.toThrow()
+  })
 
-  it('showCssPreview does not throw', () => {
-    activate(makeContext());
-    expect(() => _getCommandHandler('tailwindStash.showCssPreview')!()).not.toThrow();
-  });
-});
+  it("showCssPreview does not throw", () => {
+    activate(makeContext())
+    expect(() => _getCommandHandler("tailwindStash.showCssPreview")!()).not.toThrow()
+  })
+})
 
 // ─── deactivate ─────────────────────────────────────────────────────
 
-describe('deactivate', () => {
-  it('does not throw', () => {
-    expect(() => deactivate()).not.toThrow();
-  });
+describe("deactivate", () => {
+  it("does not throw", () => {
+    expect(() => deactivate()).not.toThrow()
+  })
 
-  it('returns undefined', () => {
-    expect(deactivate()).toBeUndefined();
-  });
-});
+  it("returns undefined", () => {
+    expect(deactivate()).toBeUndefined()
+  })
+})

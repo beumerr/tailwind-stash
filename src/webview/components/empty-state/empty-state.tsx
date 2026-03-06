@@ -1,13 +1,13 @@
-import './EmptyState.css';
+import "./empty-state.scss"
 
 interface EmptyStateProps {
-  message: string;
+  message: string
 }
 
 export function EmptyState({ message }: EmptyStateProps) {
   return (
-    <div class="empty-state">
+    <div className="empty-state">
       <p>{message}</p>
     </div>
-  );
+  )
 }

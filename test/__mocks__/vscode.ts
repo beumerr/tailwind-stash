@@ -1,22 +1,37 @@
 export class Position {
-  constructor(public line: number, public character: number) {}
+  constructor(
+    public line: number,
+    public character: number,
+  ) {}
 }
 
 export class Range {
-  constructor(public start: Position, public end: Position) {}
+  constructor(
+    public start: Position,
+    public end: Position,
+  ) {}
 
   contains(pos: Position): boolean {
-    if (pos.line < this.start.line || pos.line > this.end.line) return false;
-    if (pos.line === this.start.line && pos.character < this.start.character) return false;
-    if (pos.line === this.end.line && pos.character > this.end.character) return false;
-    return true;
+    if (pos.line < this.start.line || pos.line > this.end.line) {
+      return false
+    }
+    if (pos.line === this.start.line && pos.character < this.start.character) {
+      return false
+    }
+    if (pos.line === this.end.line && pos.character > this.end.character) {
+      return false
+    }
+    return true
   }
 }
 
 export class Selection {
-  active: Position;
-  constructor(public anchor: Position, active?: Position) {
-    this.active = active ?? anchor;
+  active: Position
+  constructor(
+    public anchor: Position,
+    active?: Position,
+  ) {
+    this.active = active ?? anchor
   }
 }
 
@@ -25,128 +40,137 @@ export class ThemeColor {
 }
 
 export class MarkdownString {
-  constructor(public value: string = '') {}
+  constructor(public value: string = "") {}
 }
 
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockDocument(text: string): any {
-  const lines = text.split('\n');
+  const lines = text.split("\n")
   return {
     getText: () => text,
     positionAt(offset: number): Position {
-      let line = 0;
-      let remaining = offset;
+      let line = 0
+      let remaining = offset
       for (let i = 0; i < lines.length; i++) {
-        const lineLen = lines[i].length + 1; // +1 for newline
+        const lineLen = lines[i].length + 1 // +1 for newline
         if (remaining < lineLen) {
-          return new Position(i, remaining);
+          return new Position(i, remaining)
         }
-        remaining -= lineLen;
-        line = i + 1;
+        remaining -= lineLen
+        line = i + 1
       }
-      return new Position(line, remaining);
+      return new Position(line, remaining)
     },
-  };
+  }
 }
 
 // ─── Mock registries for testing ────────────────────────────────────
 
-const commandHandlers = new Map<string, (...args: any[]) => any>();
+const commandHandlers = new Map<string, (...args: Array<unknown>) => unknown>()
 const eventListeners = {
-  onDidChangeActiveTextEditor: [] as Function[],
-  onDidChangeTextDocument: [] as Function[],
-  onDidChangeTextEditorSelection: [] as Function[],
-  onDidChangeConfiguration: [] as Function[],
-};
+  onDidChangeActiveTextEditor: [] as Array<(...args: Array<unknown>) => void>,
+  onDidChangeConfiguration: [] as Array<(...args: Array<unknown>) => void>,
+  onDidChangeTextDocument: [] as Array<(...args: Array<unknown>) => void>,
+  onDidChangeTextEditorSelection: [] as Array<(...args: Array<unknown>) => void>,
+}
 
 export function _reset() {
-  commandHandlers.clear();
+  commandHandlers.clear()
   for (const key of Object.keys(eventListeners)) {
-    (eventListeners as any)[key] = [];
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(eventListeners as any)[key] = []
   }
-  window.activeTextEditor = undefined;
+  window.activeTextEditor = undefined
 }
 
 export function _getCommandHandler(id: string) {
-  return commandHandlers.get(id);
+  return commandHandlers.get(id)
 }
 
-export function _fireEvent(event: keyof typeof eventListeners, ...args: any[]) {
+export function _fireEvent(event: keyof typeof eventListeners, ...args: Array<unknown>) {
   for (const listener of eventListeners[event]) {
-    listener(...args);
+    listener(...args)
   }
 }
 
 export function createMockEditor(text: string, opts?: { cursorLine?: number; uri?: string }) {
-  const doc = createMockDocument(text);
-  const uri = opts?.uri ?? 'file:///test.tsx';
-  doc.uri = { toString: () => uri, scheme: 'file' };
-  const cursorLine = opts?.cursorLine ?? 0;
-  const decorationCalls: { type: any; decorations: any[] }[] = [];
+  const doc = createMockDocument(text)
+  const uri = opts?.uri ?? "file:///test.tsx"
+  doc.uri = { scheme: "file", toString: () => uri }
+  const cursorLine = opts?.cursorLine ?? 0
+  const decorationCalls: Array<{ decorations: Array<unknown>; type: unknown }> = []
   const editor = {
+    _decorationCalls: decorationCalls,
     document: doc,
     selection: new Selection(new Position(cursorLine, 0)),
-    setDecorations(type: any, decorations: any[]) {
-      decorationCalls.push({ type, decorations });
+    setDecorations(type: unknown, decorations: Array<unknown>) {
+      decorationCalls.push({ decorations, type })
     },
     viewColumn: 1,
-    _decorationCalls: decorationCalls,
-  };
-  return editor;
+  }
+  return editor
 }
 
 export const commands = {
-  registerCommand(id: string, handler: (...args: any[]) => any) {
-    commandHandlers.set(id, handler);
-    return { dispose() { commandHandlers.delete(id); } };
+  executeCommand(id: string, ...args: Array<unknown>) {
+    const handler = commandHandlers.get(id)
+    if (handler) {
+      return handler(...args)
+    }
   },
-  executeCommand(id: string, ...args: any[]) {
-    const handler = commandHandlers.get(id);
-    if (handler) return handler(...args);
+  registerCommand(id: string, handler: (...args: Array<unknown>) => unknown) {
+    commandHandlers.set(id, handler)
+    return {
+      dispose() {
+        commandHandlers.delete(id)
+      },
+    }
   },
-};
+}
 
 function makeEventEmitter(key: keyof typeof eventListeners) {
-  return (listener: Function) => {
-    eventListeners[key].push(listener);
-    return { dispose() {} };
-  };
+  return (listener: (...args: Array<unknown>) => void) => {
+    eventListeners[key].push(listener)
+    return { dispose() {} }
+  }
 }
 
 export const window = {
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   activeTextEditor: undefined as any,
-  visibleTextEditors: [] as any[],
-  createTextEditorDecorationType(_opts: any) {
-    return { dispose() {} };
+  createTextEditorDecorationType(_opts: unknown) {
+    return { dispose() {} }
   },
-  onDidChangeActiveTextEditor: makeEventEmitter('onDidChangeActiveTextEditor'),
-  onDidChangeTextEditorSelection: makeEventEmitter('onDidChangeTextEditorSelection'),
-  showInformationMessage(_msg: string) {},
   createWebviewPanel() {
     return {
-      webview: { html: '', onDidReceiveMessage() {}, postMessage() {} },
+      dispose() {},
       onDidDispose() {},
       reveal() {},
-      dispose() {},
-    };
+      webview: { html: "", onDidReceiveMessage() {}, postMessage() {} },
+    }
   },
+  onDidChangeActiveTextEditor: makeEventEmitter("onDidChangeActiveTextEditor"),
+  onDidChangeTextEditorSelection: makeEventEmitter("onDidChangeTextEditorSelection"),
+  showInformationMessage(_msg: string) {},
   showTextDocument() {},
-};
+  visibleTextEditors: [] as Array<unknown>,
+}
 
 export const workspace = {
   getConfiguration(_section?: string) {
     return {
       get<T>(key: string, defaultValue: T): T {
-        return defaultValue;
+        return defaultValue
       },
-    };
+    }
   },
-  onDidChangeTextDocument: makeEventEmitter('onDidChangeTextDocument'),
-  onDidChangeConfiguration: makeEventEmitter('onDidChangeConfiguration'),
-};
+  onDidChangeConfiguration: makeEventEmitter("onDidChangeConfiguration"),
+  onDidChangeTextDocument: makeEventEmitter("onDidChangeTextDocument"),
+}
 
 export const ViewColumn = {
   Beside: 2,
-};
+}
 
 export enum TextEditorRevealType {
   InCenter = 2,

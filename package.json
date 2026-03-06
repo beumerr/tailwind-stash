@@ -49,63 +49,143 @@
       {
         "command": "tailwindStash.showCssPreview",
         "title": "Tailwind Stash: Show Class Editor Panel"
+      },
+      {
+        "command": "tailwindStash.hideCssPreview",
+        "title": "Tailwind Stash: Hide Class Editor Panel"
+      },
+      {
+        "command": "tailwindStash.toggleCssPreview",
+        "title": "Tailwind Stash: Toggle Class Editor Panel"
       }
     ],
-    "configuration": {
-      "title": "Tailwind Stash",
-      "properties": {
-        "tailwindStash.foldByDefault": {
-          "type": "boolean",
-          "default": true,
-          "description": "Collapse Tailwind classes by default when a file is opened"
-        },
-        "tailwindStash.placeholderStyle": {
-          "type": "string",
-          "enum": [
-            "count",
-            "empty",
-            "count-long"
-          ],
-          "enumDescriptions": [
-            "Show just the number (e.g. \"3\")",
-            "Show only an ellipsis (…)",
-            "Show count with label (e.g. \"3 classes\")"
-          ],
-          "default": "count",
-          "description": "Style of the collapse placeholder"
-        },
-        "tailwindStash.foldedTextColor": {
-          "type": "string",
-          "default": "",
-          "description": "Color of the collapse placeholder text (e.g. \"#888\", \"rgb(150,150,150)\"). Leave empty to use the default editor code lens color."
-        },
-        "tailwindStash.minClassCount": {
-          "type": "number",
-          "default": 4,
-          "minimum": 1,
-          "description": "Minimum number of classes required before collapsing kicks in"
-        },
-        "tailwindStash.extraLanguages": {
-          "type": "array",
-          "default": [],
-          "description": "(Experimental) Additional language IDs to enable collapsing for, beyond the built-in set (html, jsx, tsx, vue, svelte, astro, php). Requires reload."
-        },
-        "tailwindStash.supportedFunctions": {
-          "type": "array",
-          "default": [
-            "cn",
-            "clsx",
-            "cva",
-            "cx",
-            "twMerge",
-            "twJoin",
-            "classNames",
-            "classnames"
-          ],
-          "description": "Function names that wrap Tailwind classes. Wrap entries in / delimiters for regex (e.g. \"/^get.*Classes$/\")"
+    "configuration": [
+      {
+        "title": "Folding",
+        "properties": {
+          "tailwindStash.foldByDefault": {
+            "type": "boolean",
+            "default": true,
+            "description": "Collapse Tailwind classes by default when a file is opened"
+          },
+          "tailwindStash.placeholderStyle": {
+            "type": "string",
+            "enum": [
+              "count",
+              "empty",
+              "count-long"
+            ],
+            "enumDescriptions": [
+              "Show just the number (e.g. \"3\")",
+              "Show only an ellipsis (…)",
+              "Show count with label (e.g. \"3 classes\")"
+            ],
+            "default": "count",
+            "description": "Style of the collapse placeholder"
+          },
+          "tailwindStash.minClassCount": {
+            "type": "number",
+            "default": 4,
+            "minimum": 1,
+            "description": "Minimum number of classes required before collapsing kicks in"
+          },
+          "tailwindStash.extraLanguages": {
+            "type": "array",
+            "default": [],
+            "description": "(Experimental) Additional language IDs to enable collapsing for, beyond the built-in set (html, jsx, tsx, vue, svelte, astro, php). Requires reload."
+          },
+          "tailwindStash.supportedFunctions": {
+            "type": "array",
+            "default": [
+              "cn",
+              "clsx",
+              "cva",
+              "cx",
+              "twMerge",
+              "twJoin",
+              "classNames",
+              "classnames"
+            ],
+            "description": "Function names that wrap Tailwind classes. Wrap entries in / delimiters for regex (e.g. \"/^get.*Classes$/\")"
+          }
+        }
+      },
+      {
+        "title": "Panel",
+        "properties": {
+          "tailwindStash.scrollEditorOnPanelSelect": {
+            "type": "boolean",
+            "default": true,
+            "description": "Scroll the editor to the class range when clicking a textarea in the panel"
+          },
+          "tailwindStash.scrollPanelOnEditorSelect": {
+            "type": "boolean",
+            "default": true,
+            "description": "Scroll the panel to the active card when focusing a class in the editor"
+          }
+        }
+      },
+      {
+        "title": "Appearance",
+        "properties": {
+          "tailwindStash.elementTextColor": {
+            "type": "string",
+            "default": "",
+            "description": "Color of the element name in the card header (e.g. \"#ee9d28\"). Leave empty to use the default."
+          },
+          "tailwindStash.activeBorderColor": {
+            "type": "string",
+            "default": "",
+            "description": "Border color of the active card (e.g. \"#007fd4\"). Leave empty to use the VS Code focus border color."
+          },
+          "tailwindStash.textareaFocusBackground": {
+            "type": "string",
+            "default": "",
+            "description": "Background color of the textarea when focused (e.g. \"rgba(0,100,200,0.1)\"). Leave empty to use the default selection background."
+          },
+          "tailwindStash.foldedTextColor": {
+            "type": "string",
+            "default": "",
+            "description": "Color of the collapse placeholder text (e.g. \"#888\", \"rgb(150,150,150)\"). Leave empty to use the default editor code lens color."
+          }
+        }
+      },
+      {
+        "title": "Keyboard Shortcuts",
+        "properties": {
+          "tailwindStash.shortcutToggleCollapse": {
+            "type": "string",
+            "default": "alt+shift+t",
+            "description": "Keyboard shortcut for Toggle Collapse. Requires reload."
+          },
+          "tailwindStash.shortcutCollapseAll": {
+            "type": "string",
+            "default": "alt+shift+c",
+            "description": "Keyboard shortcut for Collapse All. Requires reload."
+          },
+          "tailwindStash.shortcutExpandAll": {
+            "type": "string",
+            "default": "alt+shift+e",
+            "description": "Keyboard shortcut for Expand All. Requires reload."
+          },
+          "tailwindStash.shortcutShowPanel": {
+            "type": "string",
+            "default": "alt+shift+p",
+            "description": "Keyboard shortcut for Show Class Editor Panel. Requires reload."
+          },
+          "tailwindStash.shortcutHidePanel": {
+            "type": "string",
+            "default": "",
+            "description": "Keyboard shortcut for Hide Class Editor Panel. Requires reload."
+          },
+          "tailwindStash.shortcutTogglePanel": {
+            "type": "string",
+            "default": "",
+            "description": "Keyboard shortcut for Toggle Class Editor Panel. Requires reload."
+          }
         }
       }
-    },
+    ],
     "keybindings": [
       {
         "command": "tailwindStash.toggleCollapse",
@@ -121,15 +201,22 @@
         "command": "tailwindStash.expandAll",
         "key": "alt+shift+e",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "tailwindStash.showCssPreview",
+        "key": "alt+shift+p",
+        "when": "editorTextFocus"
       }
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm test && npm run compile",
+    "vscode:prepublish": "npm run format:check && npm run lint && npm test && npm run compile",
     "compile": "tsc -p ./ && node esbuild.webview.mjs",
     "compile:webview": "node esbuild.webview.mjs",
     "watch": "tsc -watch -p ./ & node esbuild.webview.mjs --watch",
-    "lint": "eslint src --ext ts",
+    "lint": "oxlint -c oxlint.config.mts",
+    "format": "oxfmt --write src/ test/ vitest.config.ts esbuild.webview.mjs oxlint.config.mts",
+    "format:check": "oxfmt --check src/ test/ vitest.config.ts esbuild.webview.mjs oxlint.config.mts",
     "test": "vitest run"
   },
   "devDependencies": {
@@ -137,7 +224,15 @@
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
     "esbuild": "^0.27.3",
+    "esbuild-sass-plugin": "^3.6.0",
+    "eslint-plugin-better-tailwindcss": "^4.3.2",
+    "eslint-plugin-no-only-tests": "^3.3.0",
+    "eslint-plugin-perfectionist": "^5.6.0",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "happy-dom": "^20.8.3",
+    "oxfmt": "^0.36.0",
+    "oxlint": "^1.51.0",
+    "sass": "^1.97.3",
     "typescript": "^5.3.0",
     "vitest": "^4.0.18"
   },

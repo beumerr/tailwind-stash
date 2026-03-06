@@ -1,5 +1,10 @@
 declare function acquireVsCodeApi(): {
-  postMessage(message: unknown): void;
-  getState(): unknown;
-  setState(state: unknown): void;
-};
+  getState(): unknown
+  postMessage(message: unknown): void
+  setState(state: unknown): void
+}
+
+declare module "*.scss" {
+  const content: string
+  export default content
+}

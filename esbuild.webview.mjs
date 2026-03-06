@@ -1,35 +1,36 @@
-import { build, context } from 'esbuild';
-import { copyFileSync } from 'fs';
+import { build, context } from "esbuild"
+import { sassPlugin } from "esbuild-sass-plugin"
+import { copyFileSync } from "node:fs"
 
-const isWatch = process.argv.includes('--watch');
+const isWatch = process.argv.includes("--watch")
 
 const jsOptions = {
-  entryPoints: ['src/webview/index.tsx'],
   bundle: true,
-  outfile: 'out/webview.js',
-  format: 'iife',
+  entryPoints: ["src/webview/index.tsx"],
+  format: "iife",
+  jsx: "automatic",
+  jsxImportSource: "preact",
   minify: !isWatch,
-  jsx: 'automatic',
-  jsxImportSource: 'preact',
-  target: 'es2020',
-};
-
-const cssOptions = {
-  entryPoints: ['src/webview/styles.css'],
-  bundle: true,
-  outfile: 'out/webview.css',
-  minify: !isWatch,
-};
-
-if (isWatch) {
-  const [jsCtx, cssCtx] = await Promise.all([
-    context(jsOptions),
-    context(cssOptions),
-  ]);
-  await Promise.all([jsCtx.watch(), cssCtx.watch()]);
-  console.log('Watching webview...');
-} else {
-  await Promise.all([build(jsOptions), build(cssOptions)]);
+  outfile: "out/webview.js",
+  plugins: [sassPlugin({ type: "css-text" })],
+  target: "es2020",
 }
 
-copyFileSync('src/webview/index.html', 'out/webview.html');
+const cssOptions = {
+  bundle: true,
+  entryPoints: ["src/webview/styles.scss"],
+  minify: !isWatch,
+  outfile: "out/webview.css",
+  plugins: [sassPlugin()],
+}
+
+if (isWatch) {
+  const [jsCtx, cssCtx] = await Promise.all([context(jsOptions), context(cssOptions)])
+  await Promise.all([jsCtx.watch(), cssCtx.watch()])
+  // oxlint-disable-next-line no-console
+  console.log("Watching webview...")
+} else {
+  await Promise.all([build(jsOptions), build(cssOptions)])
+}
+
+copyFileSync("src/webview/index.html", "out/webview.html")

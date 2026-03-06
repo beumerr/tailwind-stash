@@ -1,8 +1,8 @@
-import { vi } from 'vitest';
+import { vi } from "vitest"
 
 // Mock acquireVsCodeApi globally for webview tests
-(globalThis as any).acquireVsCodeApi = vi.fn(() => ({
-  postMessage: vi.fn(),
+;(globalThis as unknown as Record<string, unknown>).acquireVsCodeApi = vi.fn(() => ({
   getState: vi.fn(),
+  postMessage: vi.fn(),
   setState: vi.fn(),
-}));
+}))

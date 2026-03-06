@@ -1,73 +1,105 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
-import { ClassEntry } from '../../types';
-import { EntryCard } from './EntryCard/EntryCard';
-import { EmptyState } from '../../components/EmptyState/EmptyState';
-import './Panel.css';
+import { useEffect, useRef, useState } from "preact/hooks"
+
+import { EmptyState } from "../../components/empty-state/empty-state"
+import { EntryCard } from "../../components/entry-card/entry-card"
+import { ClassEntry } from "../../types"
+import "./panel.scss"
 
 type PanelMessage =
-  | { type: 'update'; entries: ClassEntry[]; activeIndex: number }
-  | { type: 'setActive'; index: number };
+  | {
+      activeBorderColor: string
+      elementTextColor: string
+      scrollPanelOnEditorSelect: boolean
+      textareaFocusBackground: string
+      type: "config"
+    }
+  | { activeIndex: number; entries: Array<ClassEntry>; type: "update" }
+  | { index: number; type: "setActive" }
 
 interface PanelProps {
-  vscode: ReturnType<typeof acquireVsCodeApi>;
+  vscode: ReturnType<typeof acquireVsCodeApi>
 }
 
 export function Panel({ vscode }: PanelProps) {
-  const [entries, setEntries] = useState<ClassEntry[]>([]);
-  const [activeIndex, setActiveIndex] = useState(-1);
-  const hasFocusRef = useRef(false);
+  const [entries, setEntries] = useState<Array<ClassEntry>>([])
+  const [activeIndex, setActiveIndex] = useState(-1)
+  const [autoScrollPanel, setAutoScrollPanel] = useState(true)
+  const hasFocusRef = useRef(false)
 
   useEffect(() => {
-    const onFocusIn = () => { hasFocusRef.current = true; };
-    const onFocusOut = () => { hasFocusRef.current = false; };
-    document.addEventListener('focusin', onFocusIn);
-    document.addEventListener('focusout', onFocusOut);
+    const onFocusIn = () => {
+      hasFocusRef.current = true
+    }
+    const onFocusOut = () => {
+      hasFocusRef.current = false
+    }
+    document.addEventListener("focusin", onFocusIn)
+    document.addEventListener("focusout", onFocusOut)
     return () => {
-      document.removeEventListener('focusin', onFocusIn);
-      document.removeEventListener('focusout', onFocusOut);
-    };
-  }, []);
+      document.removeEventListener("focusin", onFocusIn)
+      document.removeEventListener("focusout", onFocusOut)
+    }
+  }, [])
 
   useEffect(() => {
     const handler = (event: MessageEvent<PanelMessage>) => {
-      const msg = event.data;
-      if (msg.type === 'update') {
-        setEntries(msg.entries);
-        setActiveIndex(msg.activeIndex);
-      } else if (msg.type === 'setActive') {
+      const msg = event.data
+      if (msg.type === "update") {
+        setEntries(msg.entries)
+        setActiveIndex(msg.activeIndex)
+      } else if (msg.type === "setActive") {
         if (!hasFocusRef.current) {
-          setActiveIndex(msg.index);
+          setActiveIndex(msg.index)
+        }
+      } else if (msg.type === "config") {
+        setAutoScrollPanel(msg.scrollPanelOnEditorSelect)
+        const root = document.documentElement
+        if (msg.elementTextColor) {
+          root.style.setProperty("--ts-element-color", msg.elementTextColor)
+        } else {
+          root.style.removeProperty("--ts-element-color")
+        }
+        if (msg.activeBorderColor) {
+          root.style.setProperty("--ts-active-border-color", msg.activeBorderColor)
+        } else {
+          root.style.removeProperty("--ts-active-border-color")
+        }
+        if (msg.textareaFocusBackground) {
+          root.style.setProperty("--ts-textarea-focus-bg", msg.textareaFocusBackground)
+        } else {
+          root.style.removeProperty("--ts-textarea-focus-bg")
         }
       }
-    };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
-  }, []);
+    }
+    window.addEventListener("message", handler)
+    return () => window.removeEventListener("message", handler)
+  }, [])
 
   if (entries.length === 0) {
-    return <EmptyState message="No Tailwind classes detected in the current file." />;
+    return <EmptyState message="No Tailwind classes detected in the current file." />
   }
 
   return (
-    <div class="panel">
-      <h2 class="panel__title">Tailwind Classes</h2>
+    <div className="panel">
+      <h2 className="title">Tailwind Classes</h2>
       {entries.map((entry, i) => (
         <EntryCard
-          key={`${entry.line}-${i}`}
+          autoScroll={autoScrollPanel}
           entry={entry}
           isActive={i === activeIndex}
-          onUpdateClasses={(classes) => {
-            vscode.postMessage({ type: 'updateClasses', index: i, classes });
-          }}
+          key={`${entry.line}-${i}`}
           onGoToRange={() => {
-            vscode.postMessage({ type: 'goToRange', index: i });
+            vscode.postMessage({ index: i, type: "goToRange" })
           }}
           onSelect={() => {
-            setActiveIndex(i);
-            vscode.postMessage({ type: 'selectEntry', index: i });
+            setActiveIndex(i)
+            vscode.postMessage({ index: i, type: "selectEntry" })
+          }}
+          onUpdateClasses={(classes) => {
+            vscode.postMessage({ classes, index: i, type: "updateClasses" })
           }}
         />
       ))}
     </div>
-  );
+  )
 }
