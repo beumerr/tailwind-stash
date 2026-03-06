@@ -1,0 +1,10 @@
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--vscode-editor-font-family, 'Consolas', monospace);
+  font-size: var(--vscode-editor-font-size, 13px);
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-editor-background);
+  padding: 12px;
+  margin: 0;
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectClassRanges } from '../src/classDetector';
+import { detectClassRanges } from '../src/core/classDetector';
 import { createMockDocument } from './__mocks__/vscode';
 
 const defaultFunctions = ['cn', 'clsx', 'cva', 'cx', 'twMerge', 'twJoin', 'classNames', 'classnames'];

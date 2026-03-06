@@ -1,0 +1,17 @@
+.class-editor {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: vertical;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-editor-background);
+  line-height: 1.6;
+  min-height: 40px;
+}
+
+.class-editor:focus {
+  background-color: var(--vscode-editor-selectionBackground);
+}

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { _reset, _fireEvent, createMockEditor, window } from './__mocks__/vscode';
-import { FoldingManager } from '../src/foldingProvider';
+import { FoldingManager } from '../src/core/foldingProvider';
 
 function makeContext() {
   return { subscriptions: [] } as any;

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { FoldingManager } from './foldingProvider';
-import { CSSPreviewPanel } from './cssPreviewPanel';
+import { FoldingManager } from './core/foldingProvider';
+import { CSSPreviewPanel } from './core/cssPreviewPanel';
 
 export function activate(context: vscode.ExtensionContext) {
   const foldingManager = new FoldingManager(context);
@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
       foldingManager.toggle();
     }),
     vscode.commands.registerCommand('tailwindStash.showCssPreview', () => {
-      CSSPreviewPanel.createOrShow((uri) => foldingManager.getClassRanges(uri));
+      CSSPreviewPanel.createOrShow(context.extensionPath, (uri) => foldingManager.getClassRanges(uri));
     })
   );
 

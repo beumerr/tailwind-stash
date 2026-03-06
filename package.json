@@ -126,15 +126,20 @@
   },
   "scripts": {
     "vscode:prepublish": "npm test && npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "compile": "tsc -p ./ && node esbuild.webview.mjs",
+    "compile:webview": "node esbuild.webview.mjs",
+    "watch": "tsc -watch -p ./ & node esbuild.webview.mjs --watch",
     "lint": "eslint src --ext ts",
     "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
+    "esbuild": "^0.27.3",
     "typescript": "^5.3.0",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "preact": "^10.28.4"
   }
 }

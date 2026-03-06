@@ -8,6 +8,7 @@ node_modules/**
 .gitignore
 tsconfig.json
 vitest.config.ts
+esbuild.webview.mjs
 CONTRIBUTING.md
 **/*.ts
 **/*.map
