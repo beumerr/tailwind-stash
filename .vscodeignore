@@ -16,4 +16,10 @@ CONTRIBUTING.md
 **/*.tsx
 **/*.map
 *.vsix
+coverage/**
+CLAUDE.md
+.oxfmtrc.json
+out/core/**
+out/test/**
+out/utils/**
 .DS_Store

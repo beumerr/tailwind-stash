@@ -230,6 +230,7 @@
     "test": "vitest run --coverage",
     "pretest:vscode": "tsc -p test/vscode-e2e/tsconfig.json",
     "test:vscode": "tsx scripts/run-vscode-tests.mts",
+    "package": "npx @vscode/vsce package --out dist/",
     "release": "tsx scripts/publish.mts"
   },
   "devDependencies": {
