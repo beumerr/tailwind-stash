@@ -236,7 +236,7 @@
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.1",
     "@testing-library/preact": "^3.2.4",
-    "@types/node": "^20.0.0",
+    "@types/node": "^25.3.5",
     "@types/vscode": "~1.66.0",
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.0",
