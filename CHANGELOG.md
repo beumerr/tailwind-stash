@@ -4,6 +4,18 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] - 2026-03-06
+
+### Changed
+
+- Unified test scripts: `npm test` now runs both unit and E2E tests
+- Bumped GitHub Actions to checkout@v6 and setup-node@v6
+- Bumped `@types/node` and `glob` dependencies
+- Fixed child process deprecation warning in build script
+- Added extension icon and Marketplace badges
+- Added demo gif to README
+- Improved Marketplace discoverability with better keywords and gallery banner
+
 ## [0.1.0] - 2026-03-06
 
 ### Added
