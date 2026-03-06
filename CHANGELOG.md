@@ -8,12 +8,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Horizontal collapse of Tailwind CSS class strings with configurable placeholder styles (count, count-long, empty)
-- Class Editor Panel for editing Tailwind classes in a side panel with bi-directional sync
+- Demo gif in README
+- Horizontal collapse of Tailwind CSS class strings with configurable placeholder styles (`count`, `count-long`, `empty`)
+- Automatic collapse on file open (`foldByDefault` setting)
+- Configurable minimum class count threshold before collapsing
+- Cursor-line auto-expand: the line with the cursor always shows full classes
 - Hover tooltips showing all classes on collapsed strings
-- Configurable minimum class count threshold
+- Class Editor Panel: editable side panel showing all Tailwind classes organized by element
+- Bi-directional sync between the editor and the panel
+- Click element header in panel to jump to source location
+- Active element highlighting as cursor moves
+- Panel auto-scrolls to active card (`scrollPanelOnEditorSelect` setting)
+- Editor scrolls to element when selecting a panel textarea (`scrollEditorOnPanelSelect` setting)
+- 6 commands: Toggle Collapse, Collapse All, Expand All, Show/Hide/Toggle Class Editor Panel
+- 5 default keyboard shortcuts (`Alt+Shift+T/C/E/P/L`)
+- All keyboard shortcuts configurable via settings
 - Support for utility functions: `cn()`, `clsx()`, `cva()`, `cx()`, `twMerge()`, `twJoin()`, `classNames()`, `classnames()`
-- Custom function support with regex patterns
-- Keyboard shortcuts for toggle, collapse all, and expand all
+- Custom function support with regex patterns (`supportedFunctions` setting)
 - Support for HTML, JavaScript, JSX, TypeScript, TSX, Vue, Svelte, Astro, PHP
-- Experimental extra language support via settings
+- Experimental extra language support via `extraLanguages` setting
+- Appearance customization: folded text color, element text color, active card border color, textarea focus background
+- CI pipeline with Node 20/22 matrix, VS Code 1.66.0 + stable E2E tests, branch name validation
+- Dependabot for npm and GitHub Actions dependency updates
