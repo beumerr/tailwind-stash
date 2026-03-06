@@ -61,6 +61,13 @@ export default defineConfig({
         "react/react-in-jsx-scope": "off",
       },
     },
+    {
+      // E2E tests require namespace imports for CJS modules (assert, vscode)
+      files: ["test/vscode-e2e/**"],
+      rules: {
+        "import-x/no-namespace": "off",
+      },
+    },
   ],
   plugins: ["typescript", "import", "react", "unicorn"],
   rules: {

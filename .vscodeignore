@@ -9,7 +9,7 @@ scripts/**
 .gitignore
 tsconfig.json
 vitest.config.ts
-esbuild.webview.mjs
+esbuild.webview.mts
 oxlint.config.mts
 CONTRIBUTING.md
 **/*.ts

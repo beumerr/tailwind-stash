@@ -21,11 +21,13 @@ The extension has two separate runtimes that communicate via message passing:
 ┌──────────────────────────────┐     ┌──────────────────────────────┐
 │  Extension Host (Node.js)    │     │  Webview (Browser sandbox)   │
 │                              │     │                              │
-│  src/extension.ts            │◄───►│  src/webview/index.tsx        │
-│  src/core/                   │     │  src/webview/views/           │
-│    classDetector.ts          │     │  src/webview/components/      │
+│  src/extension.ts            │◄───►│  src/webview/index.tsx       │
+│  src/core/                   │     │  src/webview/views/          │
+│    classDetector.ts          │     │  src/webview/components/     │
 │    foldingProvider.ts        │     │                              │
 │    cssPreviewPanel.ts        │     │  Preact + Tailwind CSS       │
+│  src/utils/                  │     │                              │
+│    types.ts, utils.ts        │     │                              │
 └──────────────────────────────┘     └──────────────────────────────┘
 ```
 
@@ -37,6 +39,8 @@ Runs as a standard VS Code extension in Node.js.
 - **`core/classDetector.ts`** — Regex-based detection of Tailwind class strings in documents. Handles HTML attributes (`class="..."`), JSX (`className="..."`), template literals with interpolations, and utility function calls (`cn()`, `clsx()`, etc.). Returns `ClassRange[]` with the class names, element tag, and document range.
 - **`core/foldingProvider.ts`** — `FoldingManager` applies VS Code text decorations to collapse class strings visually. Uses `letterSpacing: -9999px` + `opacity: 0` to hide the original text and renders a placeholder (`before` decoration). Automatically expands the line the cursor is on.
 - **`core/cssPreviewPanel.ts`** — `CSSPreviewPanel` manages the webview panel lifecycle. Sends class data to the webview via `postMessage` and handles incoming edits, navigation, and selection sync.
+- **`utils/types.ts`** — Shared types (e.g. `ClassEntry`) used by both extension host and webview.
+- **`utils/utils.ts`** — Shared utilities: `cn()` class joiner, `debounce()`, `generateNonce()`.
 
 ### Webview (`src/webview/`)
 
@@ -46,7 +50,7 @@ Runs in an isolated browser sandbox. Built with **Preact** and **Tailwind CSS v4
 - **`views/panel/panel.tsx`** — Main panel view. Listens for messages from the extension host and renders entry cards.
 - **`components/`** — Preact components (see [Component conventions](#component-conventions)).
 - **`styles.css`** — Tailwind CSS entry point with `@theme` tokens that map to VS Code CSS variables.
-- **`types.ts`** — Shared types for the webview (e.g. `ClassEntry`).
+- **`global.d.ts`** — Ambient type declarations for the webview (e.g. VS Code API global).
 
 The webview has its own `tsconfig.json` with `jsxImportSource: "preact"` and `moduleResolution: "bundler"`.
 
@@ -78,7 +82,7 @@ The extension has two independent compile steps:
 | Command | What it does |
 |---|---|
 | `tsc -p ./` | Compiles the extension host (`src/` minus `src/webview/`) to `out/extension.js` |
-| `node esbuild.webview.mjs` | Bundles the webview with esbuild + Tailwind CLI to `out/webview.{js,css,html}` |
+| `tsx esbuild.webview.mts` | Bundles the webview with esbuild + Tailwind CLI to `out/webview.{js,css,html}` |
 
 `npm run compile` runs both. `npm run watch` runs both in watch mode.
 
@@ -94,37 +98,76 @@ npm run lint             # oxlint + component structure check
 npm run format           # format with oxfmt
 npm run format:check     # check formatting without writing
 npm run typecheck        # type-check without emitting
-npm test                 # run all tests with vitest
+npm test                 # run unit + integration tests with vitest
+npm run test:vscode      # run E2E smoke tests in a real VS Code instance
 ```
 
 ## Testing
 
-Tests use **Vitest** with **happy-dom** for webview component tests and a VS Code mock for extension tests.
+The project has three layers of tests, each catching different kinds of problems:
+
+| Layer | Runner | What it tests | Command |
+|---|---|---|---|
+| Unit tests | Vitest + happy-dom | Individual modules in isolation | `npm test` |
+| Integration tests | Vitest | Cross-module interactions (e.g. commands → decorations → panel) | `npm test` |
+| VS Code E2E (smoke) | Mocha + @vscode/test-electron | Extension inside a real VS Code instance | `npm run test:vscode` |
+
+### Unit & integration tests (Vitest)
 
 ```
 test/
-  core/                  # Extension host tests
+  core/                    # Extension host unit tests
     classDetector.test.ts
     foldingProvider.test.ts
     cssPreviewPanel.test.ts
     extension.test.ts
-  webview/               # Preact component tests
+    projectStructure.test.ts
+  webview/                 # Preact component unit tests
     classEditor.test.tsx
     entryCard.test.tsx
     panel.test.tsx
     setup.ts
+  integration/             # Cross-module integration tests
+    activation.test.ts
   __mocks__/
-    vscode.ts            # Mock for the vscode module
+    vscode.ts              # Mock for the vscode module
 ```
 
 - Webview tests use `@testing-library/preact` with `screen` queries (`getByText`, `getByRole`, etc.) — no `data-testid` attributes.
 - The `vscode` module is aliased to a mock in `vitest.config.ts`.
+- **Integration tests** (`test/integration/`) verify that modules work together correctly — e.g. that commands produce real decorations via the detector, that the panel receives entries from the folding manager, and that editor events update both systems.
 - **Project structure test** (`test/core/projectStructure.test.ts`) — verifies that all critical files (LICENSE, README, source files, CI config, etc.) exist. If you add or rename a file, update the `requiredFiles` array in this test.
+- Coverage thresholds are enforced at 90% for statements, branches, functions, and lines.
 - Run a single test file: `npx vitest run test/webview/panel.test.tsx`
+
+### VS Code E2E smoke tests
+
+These run the extension inside a real VS Code instance downloaded by `@vscode/test-electron`. They verify the extension activates, registers all commands, and basic operations work against the real VS Code API (not mocks).
+
+```
+test/vscode-e2e/
+  index.ts              # Mocha test runner entry point
+  smoke.test.ts         # Smoke tests (activation, commands, config)
+  tsconfig.json         # Separate tsconfig → compiles to out/test/vscode-e2e/
+scripts/
+  run-vscode-tests.mts  # Downloads VS Code and runs the tests
+```
+
+```bash
+npm run test:vscode                        # test against minimum supported version (1.66.0)
+npm run test:vscode -- --version 1.85.0    # test a specific version
+npm run test:vscode -- --version stable    # test latest stable
+```
+
+The `pretest:vscode` script compiles the E2E tests automatically before running.
+
+CI runs E2E tests against both **1.66.0** (minimum) and **stable** (latest) to catch regressions on either end.
+
+> **Note:** E2E tests require a display. CI uses `xvfb-run`. Locally on macOS/Windows they run natively. On headless Linux, prefix with `xvfb-run -a`.
 
 ## Component conventions
 
-Components live in `src/webview/components/`. The structure is enforced by a lint script (`scripts/lint-component-structure.mjs`) that runs as part of `npm run lint`.
+Components live in `src/webview/components/`. The structure is enforced by a lint script (`scripts/lint-component-structure.mts`) that runs as part of `npm run lint`.
 
 Rules:
 
@@ -152,6 +195,20 @@ The project uses **oxlint** with the config in `oxlint.config.mts`. Key plugins:
 - `no-only-tests` — prevents `.only` from being committed
 
 Since the webview uses Preact (lowercase DOM attributes), `react/no-unknown-property` is disabled for `src/webview/**`.
+
+## VS Code version compatibility
+
+The extension supports VS Code **1.66.0+**. This is enforced at two levels:
+
+1. **Compile-time** — `@types/vscode` is pinned to `~1.66.0` (tilde = patch updates only). TypeScript will error if you use an API introduced after 1.66. **Never change `@types/vscode` to `^` — it would silently allow newer APIs.**
+2. **Run-time** — CI runs E2E smoke tests against VS Code 1.66.0 and latest stable.
+
+**`engines.vscode` and `@types/vscode` must always match.** If you change the minimum version, update both.
+
+To test against a specific version locally:
+```bash
+npm run test:vscode -- --version 1.80.0
+```
 
 ## Debugging
 
@@ -225,12 +282,13 @@ Branch names are validated by CI. Use one of these prefixes followed by a `/` an
 
 | Prefix | Use for | Example |
 |---|---|---|
-| `feat/` | New features | `feat/class-sorting` |
+| `feature/` | New features | `feature/class-sorting` |
 | `fix/` | Bug fixes | `fix/collapse-multiline` |
 | `refactor/` | Code restructuring (no behavior change) | `refactor/split-detector` |
 | `docs/` | Documentation only | `docs/add-api-guide` |
 | `chore/` | Maintenance, deps, CI | `chore/update-esbuild` |
 | `test/` | Adding or updating tests | `test/panel-edge-cases` |
+
 ### Rules
 
 - **No direct pushes to `master`** — all changes go through a PR
@@ -246,7 +304,7 @@ Branch names are validated by CI. Use one of these prefixes followed by a `/` an
 ### For contributors
 
 1. Fork the repo
-2. Create a branch from `master` (e.g. `feat/my-feature`)
+2. Create a branch from `master` (e.g. `feature/my-feature`)
 3. Make your changes
 4. Bump the version in `package.json` and update `CHANGELOG.md`
 5. Run `npm run format`, `npm run lint`, `npm run typecheck`, and `npm test`

@@ -58,6 +58,13 @@ const requiredFiles = [
   "test/webview/classEditor.test.tsx",
   "test/webview/entryCard.test.tsx",
   "test/webview/panel.test.tsx",
+  "test/integration/activation.test.ts",
+
+  // ─── VS Code E2E tests ─────────────────────────────────────
+  "test/vscode-e2e/index.ts",
+  "test/vscode-e2e/smoke.test.ts",
+  "test/vscode-e2e/tsconfig.json",
+  "scripts/run-vscode-tests.mts",
 ]
 
 describe("project structure", () => {

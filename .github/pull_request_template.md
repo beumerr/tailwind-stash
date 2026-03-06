@@ -17,6 +17,7 @@
 
 - [ ] `npm run format:check` passes
 - [ ] `npm run lint` passes
+- [ ] `npm run typecheck` passes
 - [ ] `npm test` passes
 - [ ] Tested with Extension Development Host (`F5`)
 - [ ] Version bumped in `package.json` (patch for fixes, minor for features, major for breaking changes)

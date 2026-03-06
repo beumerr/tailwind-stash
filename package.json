@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/beumerr/tailwind-stash#readme",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.66.0"
   },
   "categories": [
     "Formatters",
@@ -40,15 +40,15 @@
     "commands": [
       {
         "command": "tailwindStash.collapseAll",
-        "title": "Tailwind Stash: Collapse All"
+        "title": "Tailwind Stash: Collapse All Classnames"
       },
       {
         "command": "tailwindStash.expandAll",
-        "title": "Tailwind Stash: Expand All"
+        "title": "Tailwind Stash: Expand All Classnames"
       },
       {
         "command": "tailwindStash.toggleCollapse",
-        "title": "Tailwind Stash: Toggle Collapse"
+        "title": "Tailwind Stash: Toggle Collapse Classnames"
       },
       {
         "command": "tailwindStash.showCssPreview",
@@ -184,7 +184,7 @@
           },
           "tailwindStash.shortcutTogglePanel": {
             "type": "string",
-            "default": "",
+            "default": "alt+shift+l",
             "description": "Keyboard shortcut for Toggle Class Editor Panel. Requires reload."
           }
         }
@@ -210,6 +210,11 @@
         "command": "tailwindStash.showCssPreview",
         "key": "alt+shift+p",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "tailwindStash.toggleCssPreview",
+        "key": "alt+shift+l",
+        "when": "editorTextFocus"
       }
     ]
   },
@@ -223,13 +228,20 @@
     "format:check": "oxfmt --check src/ test/ vitest.config.ts esbuild.webview.mts oxlint.config.mts scripts/",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage",
+    "pretest:vscode": "tsc -p test/vscode-e2e/tsconfig.json",
+    "test:vscode": "tsx scripts/run-vscode-tests.mts",
     "release": "tsx scripts/publish.mts"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.1",
     "@testing-library/preact": "^3.2.4",
     "@types/node": "^20.0.0",
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "~1.66.0",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.0",
+    "@vscode/test-electron": "^2.5.2",
+    "glob": "^11.0.0",
+    "mocha": "^11.0.0",
     "@vitest/coverage-v8": "^4.0.18",
     "esbuild": "^0.27.3",
     "eslint-plugin-better-tailwindcss": "^4.3.2",

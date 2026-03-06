@@ -26,6 +26,7 @@ export default defineConfig({
         statements: 90,
       },
     },
+    exclude: ["test/vscode-e2e/**", "out/**", "node_modules/**"],
     globals: true,
   },
 })
