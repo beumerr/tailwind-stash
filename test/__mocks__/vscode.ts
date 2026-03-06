@@ -25,21 +25,41 @@ export class Position {
   }
 
   compareTo(other: Position): number {
-    if (this.line < other.line) { return -1 }
-    if (this.line > other.line) { return 1 }
-    if (this.character < other.character) { return -1 }
-    if (this.character > other.character) { return 1 }
+    if (this.line < other.line) {
+      return -1
+    }
+    if (this.line > other.line) {
+      return 1
+    }
+    if (this.character < other.character) {
+      return -1
+    }
+    if (this.character > other.character) {
+      return 1
+    }
     return 0
   }
 
-  translate(lineDeltaOrChange?: { characterDelta?: number; lineDelta?: number } | number, characterDelta?: number): Position {
+  translate(
+    lineDeltaOrChange?: { characterDelta?: number; lineDelta?: number } | number,
+    characterDelta?: number,
+  ): Position {
     if (typeof lineDeltaOrChange === "object") {
-      return new Position(this.line + (lineDeltaOrChange.lineDelta ?? 0), this.character + (lineDeltaOrChange.characterDelta ?? 0))
+      return new Position(
+        this.line + (lineDeltaOrChange.lineDelta ?? 0),
+        this.character + (lineDeltaOrChange.characterDelta ?? 0),
+      )
     }
-    return new Position(this.line + (lineDeltaOrChange ?? 0), this.character + (characterDelta ?? 0))
+    return new Position(
+      this.line + (lineDeltaOrChange ?? 0),
+      this.character + (characterDelta ?? 0),
+    )
   }
 
-  with(lineOrChange?: { character?: number; line?: number } | number, character?: number): Position {
+  with(
+    lineOrChange?: { character?: number; line?: number } | number,
+    character?: number,
+  ): Position {
     if (typeof lineOrChange === "object") {
       return new Position(lineOrChange.line ?? this.line, lineOrChange.character ?? this.character)
     }
@@ -84,8 +104,16 @@ export class Range {
   }
 
   intersection(other: Range): Range | undefined {
-    const start = this.start.line > other.start.line || (this.start.line === other.start.line && this.start.character > other.start.character) ? this.start : other.start
-    const end = this.end.line < other.end.line || (this.end.line === other.end.line && this.end.character < other.end.character) ? this.end : other.end
+    const start =
+      this.start.line > other.start.line ||
+      (this.start.line === other.start.line && this.start.character > other.start.character)
+        ? this.start
+        : other.start
+    const end =
+      this.end.line < other.end.line ||
+      (this.end.line === other.end.line && this.end.character < other.end.character)
+        ? this.end
+        : other.end
     if (start.line > end.line || (start.line === end.line && start.character > end.character)) {
       return undefined
     }
@@ -93,8 +121,16 @@ export class Range {
   }
 
   union(other: Range): Range {
-    const start = this.start.line < other.start.line || (this.start.line === other.start.line && this.start.character < other.start.character) ? this.start : other.start
-    const end = this.end.line > other.end.line || (this.end.line === other.end.line && this.end.character > other.end.character) ? this.end : other.end
+    const start =
+      this.start.line < other.start.line ||
+      (this.start.line === other.start.line && this.start.character < other.start.character)
+        ? this.start
+        : other.start
+    const end =
+      this.end.line > other.end.line ||
+      (this.end.line === other.end.line && this.end.character > other.end.character)
+        ? this.end
+        : other.end
     return new Range(start, end)
   }
 
@@ -185,7 +221,9 @@ export function createMockEditor(text: string, opts?: { cursorLine?: number; uri
   const editor = {
     _decorationCalls: decorationCalls,
     document: doc,
-    edit: async (callback: (editBuilder: { replace: (range: unknown, text: string) => void }) => void) => {
+    edit: async (
+      callback: (editBuilder: { replace: (range: unknown, text: string) => void }) => void,
+    ) => {
       callback({ replace() {} })
       return true
     },

@@ -13,14 +13,18 @@ export function ClassEditor({ classes, debounceMs = 500, onChange, onFocus }: Cl
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [localValue, setLocalValue] = useState(() => classes.join("\n"))
 
-  const debouncedOnChange = useMemo(() => debounce((value: string) => {
-    const joined = value
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .join(" ")
-    onChange(joined)
-  }, debounceMs), [onChange, debounceMs])
+  const debouncedOnChange = useMemo(
+    () =>
+      debounce((value: string) => {
+        const joined = value
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .join(" ")
+        onChange(joined)
+      }, debounceMs),
+    [onChange, debounceMs],
+  )
 
   useEffect(() => {
     setLocalValue(classes.join("\n"))

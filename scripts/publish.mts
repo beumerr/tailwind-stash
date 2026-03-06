@@ -35,9 +35,8 @@ function extractReleaseNotes(): string {
   }
   const afterHeader = changelog.indexOf("\n", start) + 1
   const nextSection = changelog.indexOf("\n## ", afterHeader)
-  const body = nextSection === -1
-    ? changelog.slice(afterHeader)
-    : changelog.slice(afterHeader, nextSection)
+  const body =
+    nextSection === -1 ? changelog.slice(afterHeader) : changelog.slice(afterHeader, nextSection)
   return body.trim()
 }
 
@@ -89,9 +88,7 @@ step(`Validating version (${version})`, () => {
 
 step("Checking changelog has entry for this version", () => {
   if (!changelog.includes(`## [${version}]`)) {
-    throw new Error(
-      `CHANGELOG.md has no entry for [${version}]. Add one before publishing.`,
-    )
+    throw new Error(`CHANGELOG.md has no entry for [${version}]. Add one before publishing.`)
   }
 })
 
@@ -141,10 +138,17 @@ process.stdout.write(`\n✓ All checks passed\n`)
 process.stdout.write(`\n  Version:  ${version}`)
 process.stdout.write(`\n  Tag:      ${tag}`)
 process.stdout.write(`\n  Notes:\n`)
-process.stdout.write(notes.split("\n").map((l) => `    ${l}`).join("\n"))
+process.stdout.write(
+  notes
+    .split("\n")
+    .map((l) => `    ${l}`)
+    .join("\n"),
+)
 process.stdout.write("\n")
 
-const ok = await confirm(`Create GitHub Release ${tag}? This will trigger publishing to the Marketplace.`)
+const ok = await confirm(
+  `Create GitHub Release ${tag}? This will trigger publishing to the Marketplace.`,
+)
 if (!ok) {
   process.stdout.write("Aborted.\n")
   process.exit(0)
@@ -156,10 +160,10 @@ step(`Tagging ${tag}`, () => {
 })
 
 step("Creating GitHub Release", () => {
-  execSync(
-    `gh release create ${tag} --title "${tag}" --notes-file -`,
-    { input: notes, stdio: ["pipe", "inherit", "inherit"] },
-  )
+  execSync(`gh release create ${tag} --title "${tag}" --notes-file -`, {
+    input: notes,
+    stdio: ["pipe", "inherit", "inherit"],
+  })
 })
 
 process.stdout.write(`\n✓ Release ${tag} created. The publish workflow will handle the rest.\n`)

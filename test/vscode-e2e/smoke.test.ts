@@ -45,10 +45,7 @@ describe("Extension Smoke Tests", () => {
     ]
 
     for (const cmd of expectedCommands) {
-      assert.ok(
-        allCommands.includes(cmd),
-        `Command "${cmd}" should be registered`,
-      )
+      assert.ok(allCommands.includes(cmd), `Command "${cmd}" should be registered`)
     }
   })
 
@@ -85,9 +82,7 @@ describe("Extension Smoke Tests", () => {
     await assert.doesNotReject(
       asPromise(vscode.commands.executeCommand("tailwindStash.collapseAll")),
     )
-    await assert.doesNotReject(
-      asPromise(vscode.commands.executeCommand("tailwindStash.expandAll")),
-    )
+    await assert.doesNotReject(asPromise(vscode.commands.executeCommand("tailwindStash.expandAll")))
   })
 
   it("extension contributes expected configuration", () => {

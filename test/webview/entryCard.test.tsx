@@ -184,6 +184,8 @@ describe("EntryCard", () => {
         onUpdateClasses={() => {}}
       />,
     )
-    expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe("flex\nitems-center\ngap-2\np-4")
+    expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe(
+      "flex\nitems-center\ngap-2\np-4",
+    )
   })
 })

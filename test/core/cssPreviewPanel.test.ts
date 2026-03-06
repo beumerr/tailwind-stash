@@ -15,7 +15,14 @@ import { CSSPreviewPanel, findActiveIndex } from "../../src/core/cssPreviewPanel
 
 const extensionPath = path.resolve(__dirname, "../..")
 
-function makeClassRange(startLine: number, startChar: number, endLine: number, endChar: number, classes: string[], element: string) {
+function makeClassRange(
+  startLine: number,
+  startChar: number,
+  endLine: number,
+  endChar: number,
+  classes: string[],
+  element: string,
+) {
   return {
     classes,
     element,
@@ -35,9 +42,7 @@ function createPanelWithEditor(text?: string, opts?: { cursorLine?: number }) {
       return []
     }
     // Return a realistic class range for the test text
-    return [
-      makeClassRange(0, 13, 0, 48, ["flex", "items-center", "p-4", "rounded"], "div"),
-    ]
+    return [makeClassRange(0, 13, 0, 48, ["flex", "items-center", "p-4", "rounded"], "div")]
   })
 
   CSSPreviewPanel.createOrShow(extensionPath, getClassRanges)
@@ -225,10 +230,9 @@ describe("dispose", () => {
 
 describe("handleMessage", () => {
   it("handles goToRange message", () => {
-    const { editor, panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
 
     panel._simulateMessage({ index: 0, type: "goToRange" })
 
@@ -237,27 +241,25 @@ describe("handleMessage", () => {
   })
 
   it("handles selectEntry message", () => {
-    const { panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     panel._simulateMessage({ index: 0, type: "selectEntry" })
 
     // Should have sent a setActive message back
     const messagesAfter = panel._getMessages()
-    const setActiveMsg = messagesAfter.slice(messagesBefore).find(
-      (m: { type: string }) => m.type === "setActive",
-    )
+    const setActiveMsg = messagesAfter
+      .slice(messagesBefore)
+      .find((m: { type: string }) => m.type === "setActive")
     expect(setActiveMsg).toEqual({ index: 0, type: "setActive" })
   })
 
   it("handles updateClasses message", async () => {
-    const { editor, panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const editSpy = vi.spyOn(editor!, "edit")
 
     await panel._simulateMessage({ classes: "flex p-4", index: 0, type: "updateClasses" })
@@ -266,10 +268,9 @@ describe("handleMessage", () => {
   })
 
   it("ignores messages with undefined index", () => {
-    const { panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     // Should not throw
@@ -280,10 +281,9 @@ describe("handleMessage", () => {
   })
 
   it("ignores messages with out-of-bounds index", () => {
-    const { panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     panel._simulateMessage({ index: 999, type: "goToRange" })
@@ -292,16 +292,17 @@ describe("handleMessage", () => {
   })
 
   it("handles selectEntry without scrolling when scrollEditorOnPanelSelect is false", () => {
-    const { editor, panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
 
     // Override getConfiguration to return false for scrollEditorOnPanelSelect
     const origGet = workspace.getConfiguration
     workspace.getConfiguration = (_section?: string) => ({
       get<T>(key: string, defaultValue: T): T {
-        if (key === "scrollEditorOnPanelSelect") { return false as T }
+        if (key === "scrollEditorOnPanelSelect") {
+          return false as T
+        }
         return defaultValue
       },
     })
@@ -316,10 +317,9 @@ describe("handleMessage", () => {
   })
 
   it("ignores messages when no matching editor is found", () => {
-    const { panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     // Clear visible editors so the find() fails
     window.visibleTextEditors = []
     const messagesBefore = panel._getMessages().length
@@ -334,10 +334,9 @@ describe("handleMessage", () => {
 
 describe("updateForEditor", () => {
   it("sends update message with entries when editor changes", () => {
-    const { panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messages = panel._getMessages()
     const updateMsg = messages.find((m: { type: string }) => m.type === "update")
     expect(updateMsg).toBeDefined()
@@ -373,10 +372,9 @@ describe("updateForEditor", () => {
   })
 
   it("skips update when content key is unchanged and active index is the same", () => {
-    const { editor, panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     // Fire the same selection event again (same line, same content)
@@ -394,10 +392,9 @@ describe("updateForEditor", () => {
 describe("text document changes", () => {
   it("debounces text document changes and clears content key", () => {
     vi.useFakeTimers()
-    const { editor, panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     _fireEvent("onDidChangeTextDocument", { document: editor!.document })
@@ -416,14 +413,15 @@ describe("text document changes", () => {
 
   it("ignores text changes for a different document", () => {
     vi.useFakeTimers()
-    const { panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     // Fire a text change for a different document
-    _fireEvent("onDidChangeTextDocument", { document: { uri: { toString: () => "file:///other.tsx" } } })
+    _fireEvent("onDidChangeTextDocument", {
+      document: { uri: { toString: () => "file:///other.tsx" } },
+    })
     vi.advanceTimersByTime(200)
 
     // Should not have sent any new messages
@@ -432,10 +430,9 @@ describe("text document changes", () => {
   })
 
   it("skips editor changes for output scheme", () => {
-    const { editor, panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     // Simulate active editor change with output scheme
@@ -449,10 +446,9 @@ describe("text document changes", () => {
   })
 
   it("skips selection changes for output scheme", () => {
-    const { editor, panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     const outputEditor = {
@@ -503,10 +499,9 @@ describe("updateForEditor content key caching", () => {
 
 describe("config change event", () => {
   it("ignores config changes for other sections", () => {
-    const { panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     _fireEvent("onDidChangeConfiguration", {
@@ -519,10 +514,9 @@ describe("config change event", () => {
   })
 
   it("resends config when tailwindStash config changes", () => {
-    const { panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const messagesBefore = panel._getMessages().length
 
     _fireEvent("onDidChangeConfiguration", {

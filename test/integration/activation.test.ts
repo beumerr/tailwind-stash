@@ -56,7 +56,8 @@ describe("collapseAll produces decorations on an active editor", () => {
     _getCommandHandler("tailwindStash.collapseAll")!()
 
     const hasPlaceholders = editor._decorationCalls.some(
-      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+      (c) =>
+        c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(hasPlaceholders).toBe(true)
   })
@@ -101,7 +102,8 @@ describe("decoration content matches classDetector output", () => {
     activate(makeContext())
 
     const placeholderCalls = editor._decorationCalls.filter(
-      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+      (c) =>
+        c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     // Should have decorations for the two class attributes (both ≥ 4 classes)
     expect(placeholderCalls.length).toBeGreaterThanOrEqual(1)
@@ -127,7 +129,9 @@ describe("decoration content matches classDetector output", () => {
 
     // At least one decoration should mention classes from the document
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    const allHoverText = placeholderCalls.flatMap((c) => c.decorations.map((d: any) => d.hoverMessage.value))
+    const allHoverText = placeholderCalls.flatMap((c) =>
+      c.decorations.map((d: any) => d.hoverMessage.value),
+    )
     const combinedHover = allHoverText.join(" ")
     expect(combinedHover).toContain("flex")
     expect(combinedHover).toContain("items-center")
@@ -270,7 +274,8 @@ describe("cursor movement integration", () => {
 
     // The fold decorations should exclude line 1 — the button line
     const placeholderCalls = editor._decorationCalls.filter(
-      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+      (c) =>
+        c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     // With cursor on line 1 (button class), that range should be excluded
     // We expect fewer decorations than the 2 detected class ranges

@@ -445,20 +445,21 @@ describe("empty and invalid function patterns", () => {
 
 describe("template literal interpolation edge cases", () => {
   it("handles template literal with nested braces in interpolation", () => {
-    const text = '<div className={`flex items-center gap-2 p-4 ${obj.fn({ a: 1 })} rounded mt-2 mb-2 mx-auto`}>'
+    const text =
+      "<div className={`flex items-center gap-2 p-4 ${obj.fn({ a: 1 })} rounded mt-2 mb-2 mx-auto`}>"
     const results = detect(text)
     expect(results.length).toBeGreaterThanOrEqual(1)
   })
 
   it("handles template literal with no static content after interpolation", () => {
-    const text = '<div className={`flex items-center gap-2 p-4 ${dynamicClasses}`}>'
+    const text = "<div className={`flex items-center gap-2 p-4 ${dynamicClasses}`}>"
     const results = detect(text)
     // The first segment "flex items-center gap-2 p-4" has 4 classes
     expect(results).toHaveLength(1)
   })
 
   it("handles template literal with only whitespace segments around interpolation", () => {
-    const text = '<div className={`${a} ${b}`}>'
+    const text = "<div className={`${a} ${b}`}>"
     const results = detect(text)
     expect(results).toHaveLength(0)
   })
@@ -473,7 +474,8 @@ describe("deduplication", () => {
     const results = detect(text)
     // The same range should not appear twice
     const keys = results.map(
-      (r) => `${r.range.start.line}:${r.range.start.character}-${r.range.end.line}:${r.range.end.character}`,
+      (r) =>
+        `${r.range.start.line}:${r.range.start.character}-${r.range.end.line}:${r.range.end.character}`,
     )
     expect(new Set(keys).size).toBe(keys.length)
   })

@@ -32,10 +32,7 @@ async function main() {
   await runTests({
     extensionDevelopmentPath: projectRoot,
     extensionTestsPath: path.join(projectRoot, "out", "test", "vscode-e2e", "index.js"),
-    launchArgs: [
-      "--disable-extensions",
-      "--disable-gpu",
-    ],
+    launchArgs: ["--disable-extensions", "--disable-gpu"],
     version,
   })
 }

@@ -28,7 +28,10 @@ export class CSSPreviewPanel {
     this.panel = panel
     this.extensionPath = extensionPath
     this.getClassRanges = getClassRanges
-    this.textChangeDebounce = debounce((editor: vscode.TextEditor) => this.updateForEditor(editor), 150)
+    this.textChangeDebounce = debounce(
+      (editor: vscode.TextEditor) => this.updateForEditor(editor),
+      150,
+    )
 
     this.panel.webview.html = this.getHtml()
     this.sendConfig()
@@ -188,10 +191,7 @@ export class CSSPreviewPanel {
     const css = readFileSync(cssPath, "utf8")
     const nonce = generateNonce()
 
-    return html
-      .replaceAll("{{NONCE}}", nonce)
-      .replace("{{CSS}}", css)
-      .replace("{{JS}}", js)
+    return html.replaceAll("{{NONCE}}", nonce).replace("{{CSS}}", css).replace("{{JS}}", js)
   }
 
   dispose() {

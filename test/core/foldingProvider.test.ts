@@ -162,7 +162,8 @@ describe("updateDecorations", () => {
     const { editor } = createManager(text, { cursorLine: 0 })
 
     const placeholderCall = editor!._decorationCalls.find(
-      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+      (c) =>
+        c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -174,7 +175,9 @@ describe("updateDecorations", () => {
     const origGet = workspace.getConfiguration
     workspace.getConfiguration = (_section?: string) => ({
       get<T>(key: string, defaultValue: T): T {
-        if (key === "placeholderStyle") { return "count-long" as T }
+        if (key === "placeholderStyle") {
+          return "count-long" as T
+        }
         return defaultValue
       },
     })
@@ -184,7 +187,8 @@ describe("updateDecorations", () => {
     const { editor } = createManager(text, { cursorLine: 0 })
 
     const placeholderCall = editor!._decorationCalls.find(
-      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+      (c) =>
+        c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -198,7 +202,9 @@ describe("updateDecorations", () => {
     const origGet = workspace.getConfiguration
     workspace.getConfiguration = (_section?: string) => ({
       get<T>(key: string, defaultValue: T): T {
-        if (key === "placeholderStyle") { return "empty" as T }
+        if (key === "placeholderStyle") {
+          return "empty" as T
+        }
         return defaultValue
       },
     })
@@ -208,7 +214,8 @@ describe("updateDecorations", () => {
     const { editor } = createManager(text, { cursorLine: 0 })
 
     const placeholderCall = editor!._decorationCalls.find(
-      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+      (c) =>
+        c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -222,7 +229,9 @@ describe("updateDecorations", () => {
     const origGet = workspace.getConfiguration
     workspace.getConfiguration = (_section?: string) => ({
       get<T>(key: string, defaultValue: T): T {
-        if (key === "placeholderStyle") { return "unknown-style" as T }
+        if (key === "placeholderStyle") {
+          return "unknown-style" as T
+        }
         return defaultValue
       },
     })
@@ -232,7 +241,8 @@ describe("updateDecorations", () => {
     const { editor } = createManager(text, { cursorLine: 0 })
 
     const placeholderCall = editor!._decorationCalls.find(
-      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+      (c) =>
+        c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -246,8 +256,12 @@ describe("updateDecorations", () => {
     const origGet = workspace.getConfiguration
     workspace.getConfiguration = (_section?: string) => ({
       get<T>(key: string, defaultValue: T): T {
-        if (key === "placeholderStyle") { return "count-long" as T }
-        if (key === "minClassCount") { return 1 as T }
+        if (key === "placeholderStyle") {
+          return "count-long" as T
+        }
+        if (key === "minClassCount") {
+          return 1 as T
+        }
         return defaultValue
       },
     })
@@ -257,7 +271,8 @@ describe("updateDecorations", () => {
     const { editor } = createManager(text, { cursorLine: 0 })
 
     const placeholderCall = editor!._decorationCalls.find(
-      (c) => c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
+      (c) =>
+        c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
     expect(placeholderCall).toBeDefined()
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -288,10 +303,9 @@ describe("updateDecorations", () => {
 describe("event handlers", () => {
   it("updates decorations when active editor changes", () => {
     const { manager } = createManager()
-    const newEditor = createMockEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 1 },
-    )
+    const newEditor = createMockEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 1,
+    })
     window.activeTextEditor = newEditor
 
     _fireEvent("onDidChangeActiveTextEditor", newEditor)
