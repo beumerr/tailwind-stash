@@ -13,6 +13,23 @@
     "url": "https://github.com/beumerr/tailwind-stash/issues"
   },
   "homepage": "https://github.com/beumerr/tailwind-stash#readme",
+  "icon": "docs/icon.png",
+  "galleryBanner": {
+    "color": "#0f172a",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://img.shields.io/github/actions/workflow/status/beumerr/tailwind-stash/ci.yml?branch=master&label=CI",
+      "href": "https://github.com/beumerr/tailwind-stash/actions/workflows/ci.yml",
+      "description": "CI Status"
+    },
+    {
+      "url": "https://img.shields.io/github/license/beumerr/tailwind-stash",
+      "href": "https://github.com/beumerr/tailwind-stash/blob/master/LICENSE",
+      "description": "License"
+    }
+  ],
   "engines": {
     "vscode": "^1.66.0"
   },
@@ -27,10 +44,10 @@
     "collapse",
     "fold",
     "class",
-    "utility",
-    "editor",
-    "preview",
-    "panel"
+    "clsx",
+    "cva",
+    "jsx",
+    "react"
   ],
   "activationEvents": [
     "onStartupFinished"
