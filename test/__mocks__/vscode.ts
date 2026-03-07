@@ -161,7 +161,7 @@ export class MarkdownString {
 }
 
 export interface MockDocument {
-  getText: () => string
+  getText: (range?: Range) => string
   positionAt: (offset: number) => Position
   uri?: { scheme: string; toString: () => string }
 }
@@ -169,7 +169,18 @@ export interface MockDocument {
 export function createMockDocument(text: string): MockDocument {
   const lines = text.split("\n")
   return {
-    getText: () => text,
+    getText(range?: Range): string {
+      if (!range) {
+        return text
+      }
+      const startOffset = lines
+        .slice(0, range.start.line)
+        .reduce((sum, l) => sum + l.length + 1, 0) + range.start.character
+      const endOffset = lines
+        .slice(0, range.end.line)
+        .reduce((sum, l) => sum + l.length + 1, 0) + range.end.character
+      return text.slice(startOffset, endOffset)
+    },
     positionAt(offset: number): Position {
       let line = 0
       let remaining = offset

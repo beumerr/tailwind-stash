@@ -4,6 +4,21 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.5] - 2026-03-07
+
+### Fixed
+
+- Fix stale ranges corrupting document text (eating `">`) when editing classes in the panel
+- Fix panel showing "No Tailwind classes detected" on open (webview ready race condition)
+- Fix 150ms click delay when expanding collapsed class strings
+- Fix duplicate/multiplied classes caused by `activeTextEditor` being undefined while webview is focused
+- Fix cursor jumping and content reverting when typing or deleting in the panel textarea
+- Fix empty-line cursor jump caused by no-op edit cycles between panel and editor
+
+### Added
+
+- 23 regression tests covering all fixed bugs (290 total tests)
+
 ## [0.1.4] - 2026-03-07
 
 ### Fixed

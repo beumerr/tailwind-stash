@@ -58,8 +58,10 @@ export class CSSPreviewPanel {
         }
       }),
       vscode.workspace.onDidChangeTextDocument((e) => {
-        const editor = vscode.window.activeTextEditor
-        if (editor && e.document === editor.document) {
+        const editor = vscode.window.visibleTextEditors.find(
+          (ed) => ed.document === e.document,
+        )
+        if (editor) {
           this.lastContentKey = ""
           this.textChangeDebounce.fn(editor)
         }
@@ -108,6 +110,16 @@ export class CSSPreviewPanel {
   }
 
   private async handleMessage(msg: { classes?: string; index?: number; type: string }) {
+    if (msg.type === "ready") {
+      this.sendConfig()
+      const editor = vscode.window.activeTextEditor
+      if (editor && editor.document.uri.scheme !== "output") {
+        this.lastContentKey = ""
+        this.updateForEditor(editor)
+      }
+      return
+    }
+
     const editor = vscode.window.visibleTextEditors.find(
       (e) => e.document.uri.toString() === this.currentEditorUri,
     )
@@ -121,8 +133,25 @@ export class CSSPreviewPanel {
     }
 
     if (msg.type === "updateClasses" && msg.classes !== undefined) {
+      // Re-detect ranges to avoid stale positions after concurrent edits
+      const freshRanges = this.getClassRanges(this.currentEditorUri)
+      const freshCr = freshRanges[msg.index]
+      if (!freshCr) {
+        return
+      }
+      const rangeText = editor.document.getText(freshCr.range)
+      // Safety: verify range hasn't gone stale (shouldn't contain quotes)
+      if (/["'`]/.test(rangeText)) {
+        return
+      }
+      const newText = msg.classes!.trim()
+      // Skip no-op edits to avoid unnecessary document change cycles
+      if (newText === rangeText) {
+        return
+      }
+      this.currentRanges = freshRanges
       await editor.edit((editBuilder) => {
-        editBuilder.replace(cr.range, msg.classes!.trim())
+        editBuilder.replace(freshCr.range, newText)
       })
     } else if (msg.type === "goToRange") {
       editor.selection = new vscode.Selection(cr.range.start, cr.range.start)

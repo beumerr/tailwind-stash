@@ -46,8 +46,11 @@ export class FoldingManager {
         }
       }),
       vscode.workspace.onDidChangeTextDocument((e) => {
-        const editor = vscode.window.activeTextEditor
-        if (editor && e.document === editor.document) {
+        const editor =
+          vscode.window.activeTextEditor?.document === e.document
+            ? vscode.window.activeTextEditor
+            : vscode.window.visibleTextEditors.find((ed) => ed.document === e.document)
+        if (editor) {
           this.textChangeDebounce.fn(editor)
         }
       }),
@@ -58,7 +61,18 @@ export class FoldingManager {
           return
         }
         this.lastCursorLine = newLine
-        this.selectionDebounce.fn(e.textEditor)
+        // Skip debounce if the cursor landed on a collapsed class line —
+        // the user clicked a folded string and expects instant expansion.
+        const uri = e.textEditor.document.uri.toString()
+        const ranges = this.classRanges.get(uri)
+        const hitsCollapsed =
+          ranges && ranges.some((cr) => newLine >= cr.range.start.line && newLine <= cr.range.end.line)
+        if (hitsCollapsed) {
+          this.selectionDebounce.cancel()
+          this.updateDecorations(e.textEditor)
+        } else {
+          this.selectionDebounce.fn(e.textEditor)
+        }
       }),
       vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration("tailwindStash")) {

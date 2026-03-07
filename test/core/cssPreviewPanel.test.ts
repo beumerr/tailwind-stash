@@ -43,7 +43,7 @@ function createPanelWithEditor(text?: string, opts?: { cursorLine?: number }) {
       return []
     }
     // Return a realistic class range for the test text
-    return [makeClassRange(0, 13, 0, 48, ["flex", "items-center", "p-4", "rounded"], "div")]
+    return [makeClassRange(0, 12, 0, 41, ["flex", "items-center", "p-4", "rounded"], "div")]
   })
 
   CSSPreviewPanel.createOrShow(extensionPath, getClassRanges)
@@ -266,6 +266,23 @@ describe("handleMessage", () => {
     expect(editSpy).toHaveBeenCalled()
   })
 
+  it("skips edit when fresh range contains quotes (stale range protection)", async () => {
+    const { editor, getClassRanges, panel } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
+    const editSpy = vi.spyOn(editor!, "edit")
+
+    // Simulate stale range that extends past the closing quote
+    getClassRanges.mockReturnValue([
+      makeClassRange(0, 12, 0, 43, ["flex", "items-center", "p-4", "rounded"], "div"),
+    ])
+
+    await panel._simulateMessage({ classes: "flex p-4", index: 0, type: "updateClasses" })
+
+    expect(editSpy).not.toHaveBeenCalled()
+  })
+
   it("ignores messages with undefined index", () => {
     const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
       cursorLine: 0,
@@ -277,6 +294,21 @@ describe("handleMessage", () => {
 
     // Should not have sent any new messages
     expect(panel._getMessages().length).toBe(messagesBefore)
+  })
+
+  it("resends config and update on ready message", () => {
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
+    const messagesBefore = panel._getMessages().length
+
+    panel._simulateMessage({ type: "ready" })
+
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const configMsg = newMessages.find((m) => m.type === "config")
+    const updateMsg = newMessages.find((m) => m.type === "update")
+    expect(configMsg).toBeDefined()
+    expect(updateMsg).toBeDefined()
   })
 
   it("ignores messages with out-of-bounds index", () => {
@@ -557,5 +589,184 @@ describe("getHtml (via panel creation)", () => {
     const html = panel.webview.html
     // The webview runs in a browser sandbox — any require("node:*") will crash at runtime
     expect(html).not.toMatch(/require\(["']node:/)
+  })
+})
+
+// ─── Regression tests for fixed bugs ────────────────────────────────
+
+describe("regression: stale range protection", () => {
+  it("re-detects ranges before applying edit to avoid stale positions", async () => {
+    const { editor, getClassRanges, panel } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
+    const editSpy = vi.spyOn(editor!, "edit")
+
+    // First call returns initial range, second call returns shifted range
+    const shiftedRange = makeClassRange(0, 12, 0, 35, ["flex", "items-center", "p-4"], "div")
+    getClassRanges.mockReturnValueOnce([shiftedRange])
+
+    await panel._simulateMessage({ classes: "flex items-center p-4", index: 0, type: "updateClasses" })
+
+    // Should have called getClassRanges again (re-detect) before editing
+    expect(getClassRanges).toHaveBeenCalled()
+    expect(editSpy).toHaveBeenCalled()
+  })
+
+  it("aborts edit when re-detected range contains quote characters", async () => {
+    const { editor, getClassRanges, panel } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
+    const editSpy = vi.spyOn(editor!, "edit")
+
+    // Range extends past the closing quote — getText would return content with "
+    getClassRanges.mockReturnValue([
+      makeClassRange(0, 12, 0, 43, ["flex", "items-center", "p-4", "rounded"], "div"),
+    ])
+
+    await panel._simulateMessage({ classes: "flex p-4", index: 0, type: "updateClasses" })
+
+    expect(editSpy).not.toHaveBeenCalled()
+  })
+
+  it("aborts edit when re-detected range index is out of bounds", async () => {
+    const { editor, getClassRanges, panel } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
+    const editSpy = vi.spyOn(editor!, "edit")
+
+    // Re-detection returns empty — the class was removed by a concurrent edit
+    getClassRanges.mockReturnValue([])
+
+    await panel._simulateMessage({ classes: "flex p-4", index: 0, type: "updateClasses" })
+
+    expect(editSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe("regression: no-op edit skipping", () => {
+  it("skips editor.edit when replacement text matches current range text", async () => {
+    const { editor, panel } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
+    const editSpy = vi.spyOn(editor!, "edit")
+
+    // Send the exact same classes that are already in the document
+    await panel._simulateMessage({
+      classes: "flex items-center p-4 rounded",
+      index: 0,
+      type: "updateClasses",
+    })
+
+    // Should skip the edit since the text hasn't changed
+    expect(editSpy).not.toHaveBeenCalled()
+  })
+
+  it("applies edit when replacement text differs from current range text", async () => {
+    const { editor, panel } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
+    const editSpy = vi.spyOn(editor!, "edit")
+
+    await panel._simulateMessage({
+      classes: "flex p-4",
+      index: 0,
+      type: "updateClasses",
+    })
+
+    expect(editSpy).toHaveBeenCalled()
+  })
+})
+
+describe("regression: panel shows classes on open (ready message)", () => {
+  it("resends full state when webview sends ready message", () => {
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
+
+    const messagesBefore = panel._getMessages().length
+    panel._simulateMessage({ type: "ready" })
+
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const configMsg = newMessages.find((m) => m.type === "config")
+    const updateMsg = newMessages.find((m) => m.type === "update")
+    expect(configMsg).toBeDefined()
+    expect(updateMsg).toBeDefined()
+    expect((updateMsg as { entries: unknown[] }).entries).toHaveLength(1)
+  })
+
+  it("ready message with no active editor sends config but no update", () => {
+    createPanelWithEditor()
+    const panel = _getLastPanel()!
+
+    const messagesBefore = panel._getMessages().length
+    panel._simulateMessage({ type: "ready" })
+
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const configMsg = newMessages.find((m) => m.type === "config")
+    const updateMsg = newMessages.find((m) => m.type === "update")
+    expect(configMsg).toBeDefined()
+    expect(updateMsg).toBeUndefined()
+  })
+
+  it("ready message skips output scheme editors", () => {
+    const editor = createMockEditor('<div class="flex items-center p-4 rounded">')
+    editor.document.uri = { scheme: "output", toString: () => "output:test" }
+    window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
+
+    CSSPreviewPanel.createOrShow(extensionPath, () => [])
+    const panel = _getLastPanel()!
+
+    const messagesBefore = panel._getMessages().length
+    panel._simulateMessage({ type: "ready" })
+
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const updateMsg = newMessages.find((m) => m.type === "update")
+    expect(updateMsg).toBeUndefined()
+  })
+})
+
+describe("regression: visibleTextEditors for text document changes", () => {
+  it("uses visibleTextEditors to find editor when activeTextEditor is undefined", () => {
+    vi.useFakeTimers()
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
+    const messagesBefore = panel._getMessages().length
+
+    // Simulate webview having focus — activeTextEditor is undefined
+    window.activeTextEditor = undefined
+    // But the editor is still visible
+    window.visibleTextEditors = [editor!]
+
+    _fireEvent("onDidChangeTextDocument", { document: editor!.document })
+    vi.advanceTimersByTime(200)
+
+    // Should still have found the editor and sent an update
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const updateMsg = newMessages.find((m) => m.type === "update")
+    expect(updateMsg).toBeDefined()
+    vi.useRealTimers()
+  })
+
+  it("ignores text changes for documents not in visibleTextEditors", () => {
+    vi.useFakeTimers()
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
+    const messagesBefore = panel._getMessages().length
+
+    // Fire a text change for a document that is not in any visible editor
+    const otherDoc = { uri: { toString: () => "file:///other.tsx" } }
+    _fireEvent("onDidChangeTextDocument", { document: otherDoc })
+    vi.advanceTimersByTime(200)
+
+    expect(panel._getMessages().length).toBe(messagesBefore)
+    vi.useRealTimers()
   })
 })
