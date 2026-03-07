@@ -4,6 +4,12 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.4] - 2026-03-07
+
+### Fixed
+
+- Publish to Open VSX (namespace registration + workflow fix)
+
 ## [0.1.3] - 2026-03-07
 
 ### Fixed
