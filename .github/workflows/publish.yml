@@ -39,13 +39,16 @@ jobs:
       - run: npm run compile
       - run: npm run test:unit
 
+      - name: Package VSIX
+        run: npx @vscode/vsce package --no-update-package-json --out tailwind-stash.vsix
+
       - name: Publish to VS Code Marketplace
-        run: npx @vscode/vsce publish --no-update-package-json
+        run: npx @vscode/vsce publish --packagePath tailwind-stash.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
       - name: Publish to Open VSX
-        run: npx ovsx publish --no-update-package-json
+        run: npx ovsx publish tailwind-stash.vsix
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
         if: ${{ env.OVSX_PAT != '' }}
