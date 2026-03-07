@@ -58,9 +58,7 @@ export class CSSPreviewPanel {
         }
       }),
       vscode.workspace.onDidChangeTextDocument((e) => {
-        const editor = vscode.window.visibleTextEditors.find(
-          (ed) => ed.document === e.document,
-        )
+        const editor = vscode.window.visibleTextEditors.find((ed) => ed.document === e.document)
         if (editor) {
           this.lastContentKey = ""
           this.textChangeDebounce.fn(editor)

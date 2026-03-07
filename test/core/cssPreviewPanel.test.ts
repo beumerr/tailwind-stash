@@ -606,7 +606,11 @@ describe("regression: stale range protection", () => {
     const shiftedRange = makeClassRange(0, 12, 0, 35, ["flex", "items-center", "p-4"], "div")
     getClassRanges.mockReturnValueOnce([shiftedRange])
 
-    await panel._simulateMessage({ classes: "flex items-center p-4", index: 0, type: "updateClasses" })
+    await panel._simulateMessage({
+      classes: "flex items-center p-4",
+      index: 0,
+      type: "updateClasses",
+    })
 
     // Should have called getClassRanges again (re-detect) before editing
     expect(getClassRanges).toHaveBeenCalled()
@@ -648,10 +652,9 @@ describe("regression: stale range protection", () => {
 
 describe("regression: no-op edit skipping", () => {
   it("skips editor.edit when replacement text matches current range text", async () => {
-    const { editor, panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const editSpy = vi.spyOn(editor!, "edit")
 
     // Send the exact same classes that are already in the document
@@ -666,10 +669,9 @@ describe("regression: no-op edit skipping", () => {
   })
 
   it("applies edit when replacement text differs from current range text", async () => {
-    const { editor, panel } = createPanelWithEditor(
-      '<div class="flex items-center p-4 rounded">',
-      { cursorLine: 0 },
-    )
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
     const editSpy = vi.spyOn(editor!, "edit")
 
     await panel._simulateMessage({

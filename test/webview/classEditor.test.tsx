@@ -229,7 +229,9 @@ describe("ClassEditor regression: cursor and content stability", () => {
     fireEvent.input(textarea)
 
     // Parent still has old classes
-    rerender(<ClassEditor classes={["flex", "bg-red", "p-4"]} debounceMs={500} onChange={onChange} />)
+    rerender(
+      <ClassEditor classes={["flex", "bg-red", "p-4"]} debounceMs={500} onChange={onChange} />,
+    )
 
     // Should keep user's deletion
     expect(textarea.value).toBe("flex\n\np-4")
@@ -339,7 +341,9 @@ describe("ClassEditor regression: no duplicate classes from feedback loops", () 
     expect(onChange).toHaveBeenCalledWith("flex p-4 bg-red")
 
     // Parent updates with the new classes (edit roundtrip)
-    rerender(<ClassEditor classes={["flex", "p-4", "bg-red"]} debounceMs={300} onChange={onChange} />)
+    rerender(
+      <ClassEditor classes={["flex", "p-4", "bg-red"]} debounceMs={300} onChange={onChange} />,
+    )
 
     // Textarea should have exactly the three classes, no duplicates
     const lines = textarea.value.split("\n").filter(Boolean)

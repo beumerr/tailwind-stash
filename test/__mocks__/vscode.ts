@@ -173,12 +173,12 @@ export function createMockDocument(text: string): MockDocument {
       if (!range) {
         return text
       }
-      const startOffset = lines
-        .slice(0, range.start.line)
-        .reduce((sum, l) => sum + l.length + 1, 0) + range.start.character
-      const endOffset = lines
-        .slice(0, range.end.line)
-        .reduce((sum, l) => sum + l.length + 1, 0) + range.end.character
+      const startOffset =
+        lines.slice(0, range.start.line).reduce((sum, l) => sum + l.length + 1, 0) +
+        range.start.character
+      const endOffset =
+        lines.slice(0, range.end.line).reduce((sum, l) => sum + l.length + 1, 0) +
+        range.end.character
       return text.slice(startOffset, endOffset)
     },
     positionAt(offset: number): Position {

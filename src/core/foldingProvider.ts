@@ -66,7 +66,8 @@ export class FoldingManager {
         const uri = e.textEditor.document.uri.toString()
         const ranges = this.classRanges.get(uri)
         const hitsCollapsed =
-          ranges && ranges.some((cr) => newLine >= cr.range.start.line && newLine <= cr.range.end.line)
+          ranges &&
+          ranges.some((cr) => newLine >= cr.range.start.line && newLine <= cr.range.end.line)
         if (hitsCollapsed) {
           this.selectionDebounce.cancel()
           this.updateDecorations(e.textEditor)
