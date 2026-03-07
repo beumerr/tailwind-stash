@@ -55,6 +55,7 @@ const requiredFiles = [
   "test/core/cssPreviewPanel.test.ts",
   "test/core/extension.test.ts",
   "test/core/foldingProvider.test.ts",
+  "test/core/vscodeignore.test.ts",
   "test/webview/classEditor.test.tsx",
   "test/webview/entryCard.test.tsx",
   "test/webview/panel.test.tsx",
