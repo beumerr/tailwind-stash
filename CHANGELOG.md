@@ -4,6 +4,12 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.3] - 2026-03-07
+
+### Fixed
+
+- Fix `ovsx publish` command in publish workflow (unsupported `--no-update-package-json` flag)
+
 ## [0.1.2] - 2026-03-07
 
 ### Fixed
