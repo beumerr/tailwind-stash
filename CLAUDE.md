@@ -15,7 +15,11 @@ VS Code extension that collapses Tailwind CSS class strings and provides a webvi
 - `npm run test:vscode` — run E2E smoke tests in a real VS Code instance
 - `npm run typecheck` — type-check without emitting
 
-Always run `npm test`, `npm run lint`, and `npm run typecheck` after making changes.
+Always run these checks before committing (matches `vscode:prepublish`):
+
+```
+npm run format && npm run lint && npm run typecheck && npm run test:unit
+```
 
 ## Key rules
 

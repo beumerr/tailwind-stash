@@ -9,5 +9,7 @@ dist/
 .env.*
 coverage/
 oxlint.config.mjs.map
-.claude/
+.claude/*
+!.claude/skills/
+!.claude/settings.local.json
 meta.json
