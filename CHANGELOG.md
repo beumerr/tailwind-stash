@@ -4,6 +4,12 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.2] - 2026-03-10
+
+### Fixed
+
+- Color picker swatches no longer leave empty spaces when class strings are collapsed
+
 ## [0.2.1] - 2026-03-09
 
 ### Added

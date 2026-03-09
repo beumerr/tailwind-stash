@@ -34,6 +34,7 @@ export class FoldingManager {
     this.hideType = vscode.window.createTextEditorDecorationType({
       letterSpacing: "-9999px",
       opacity: "0",
+      textDecoration: "none; font-size: 0;",
     })
     this.textChangeDebounce = debounce((editor: vscode.TextEditor) => {
       this.updateDecorations(editor)
