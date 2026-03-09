@@ -39,6 +39,12 @@ jobs:
       - run: npm run compile
       - run: npm run test:unit
 
+      - name: Run E2E tests (min version)
+        run: xvfb-run -a npm run test:vscode
+
+      - name: Run E2E tests (stable)
+        run: xvfb-run -a npm run test:vscode -- --version stable
+
       - name: Package VSIX
         run: npx @vscode/vsce package --no-update-package-json --out tailwind-stash.vsix
 

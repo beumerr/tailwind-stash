@@ -38,6 +38,7 @@ describe("Extension Smoke Tests", () => {
     const expectedCommands = [
       "tailwindStash.collapseAll",
       "tailwindStash.expandAll",
+      "tailwindStash.expandPlaceholder",
       "tailwindStash.toggleCollapse",
       "tailwindStash.showCssPreview",
       "tailwindStash.hideCssPreview",
@@ -94,5 +95,7 @@ describe("Extension Smoke Tests", () => {
     assert.strictEqual(config.get("minClassCount"), 4)
     assert.strictEqual(config.get("scrollEditorOnPanelSelect"), true)
     assert.strictEqual(config.get("scrollPanelOnEditorSelect"), true)
+    assert.deepStrictEqual(config.get("placeholders"), {})
+    assert.strictEqual(config.get("placeholderFormat"), "{keys} +{rest}")
   })
 })

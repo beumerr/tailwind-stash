@@ -2,7 +2,7 @@
   "name": "tailwind-stash",
   "displayName": "Tailwind Stash",
   "description": "Collapse Tailwind CSS class strings with bi-directional editor panel",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "license": "MIT",
   "publisher": "beumerr",
   "repository": {
@@ -68,6 +68,10 @@
         "title": "Tailwind Stash: Toggle Collapse Classnames"
       },
       {
+        "command": "tailwindStash.expandPlaceholder",
+        "title": "Tailwind Stash: Expand Placeholder"
+      },
+      {
         "command": "tailwindStash.showCssPreview",
         "title": "Tailwind Stash: Show Class Editor Panel"
       },
@@ -114,6 +118,19 @@
             "type": "array",
             "default": [],
             "description": "(Experimental) Additional language IDs to enable collapsing for, beyond the built-in set (html, jsx, tsx, vue, svelte, astro, php). Requires reload."
+          },
+          "tailwindStash.placeholders": {
+            "type": "object",
+            "default": {},
+            "additionalProperties": {
+              "type": "string"
+            },
+            "markdownDescription": "Map of short labels to Tailwind class strings. Used for smart fold placeholders and autocomplete expansion.\n\nExample:\n```json\n{\n  \"btn\": \"px-4 py-2 bg-blue-500 text-white rounded\",\n  \"flex-center\": \"flex justify-center items-center\"\n}\n```"
+          },
+          "tailwindStash.placeholderFormat": {
+            "type": "string",
+            "default": "{keys} +{rest}",
+            "description": "Format template for matched placeholder labels. {keys} = matched names, {rest} = extra class count. The +{rest} portion is hidden when rest is 0."
           },
           "tailwindStash.supportedFunctions": {
             "type": "array",
@@ -203,6 +220,11 @@
             "type": "string",
             "default": "alt+shift+l",
             "description": "Keyboard shortcut for Toggle Class Editor Panel. Requires reload."
+          },
+          "tailwindStash.shortcutExpandPlaceholder": {
+            "type": "string",
+            "default": "alt+shift+x",
+            "description": "Keyboard shortcut for Expand Placeholder. Requires reload."
           }
         }
       }
@@ -231,6 +253,11 @@
       {
         "command": "tailwindStash.toggleCssPreview",
         "key": "alt+shift+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "tailwindStash.expandPlaceholder",
+        "key": "alt+shift+x",
         "when": "editorTextFocus"
       }
     ]

@@ -11,5 +11,4 @@ coverage/
 oxlint.config.mjs.map
 .claude/*
 !.claude/skills/
-!.claude/settings.local.json
 meta.json
