@@ -4,25 +4,10 @@ import {
   _reset,
   CompletionItemKind,
   createMockDocument,
+  mockConfig,
   Position,
-  workspace,
 } from "../__mocks__/vscode"
 import { PlaceholderCompletionProvider } from "../../src/core/placeholderCompletionProvider"
-
-function setupPlaceholders(placeholders: Record<string, string>) {
-  const origGet = workspace.getConfiguration
-  workspace.getConfiguration = (_section?: string) => ({
-    get<T>(key: string, defaultValue: T): T {
-      if (key === "placeholders") {
-        return placeholders as T
-      }
-      return defaultValue
-    },
-  })
-  return () => {
-    workspace.getConfiguration = origGet
-  }
-}
 
 beforeEach(() => {
   _reset()
@@ -30,7 +15,7 @@ beforeEach(() => {
 
 describe("PlaceholderCompletionProvider", () => {
   it("returns undefined when placeholders map is empty", () => {
-    const cleanup = setupPlaceholders({})
+    const cleanup = mockConfig({ placeholders: {} })
     const provider = new PlaceholderCompletionProvider()
     const doc = createMockDocument('<div class="">')
     const result = provider.provideCompletionItems(doc as never, new Position(0, 12))
@@ -39,7 +24,7 @@ describe("PlaceholderCompletionProvider", () => {
   })
 
   it("returns undefined when cursor is outside class context", () => {
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2" } })
     const provider = new PlaceholderCompletionProvider()
     const doc = createMockDocument('<div id="">')
     const result = provider.provideCompletionItems(doc as never, new Position(0, 9))
@@ -48,9 +33,11 @@ describe("PlaceholderCompletionProvider", () => {
   })
 
   it("returns completion items inside class attribute", () => {
-    const cleanup = setupPlaceholders({
-      btn: "px-4 py-2 rounded",
-      card: "p-6 shadow-lg",
+    const cleanup = mockConfig({
+      placeholders: {
+        btn: "px-4 py-2 rounded",
+        card: "p-6 shadow-lg",
+      },
     })
     const provider = new PlaceholderCompletionProvider()
     const doc = createMockDocument('<div class="">')
@@ -67,7 +54,7 @@ describe("PlaceholderCompletionProvider", () => {
   })
 
   it("returns completion items inside className attribute", () => {
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2" } })
     const provider = new PlaceholderCompletionProvider()
     const doc = createMockDocument('<div className="">')
     const result = provider.provideCompletionItems(doc as never, new Position(0, 16))
@@ -78,7 +65,7 @@ describe("PlaceholderCompletionProvider", () => {
   })
 
   it("returns completion items inside cn() function call", () => {
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2" } })
     const provider = new PlaceholderCompletionProvider()
     const doc = createMockDocument('cn("")')
     const result = provider.provideCompletionItems(doc as never, new Position(0, 4))
@@ -89,7 +76,7 @@ describe("PlaceholderCompletionProvider", () => {
   })
 
   it("returns completion items inside clsx() function call", () => {
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2" } })
     const provider = new PlaceholderCompletionProvider()
     const doc = createMockDocument('clsx("")')
     const result = provider.provideCompletionItems(doc as never, new Position(0, 6))
@@ -100,7 +87,7 @@ describe("PlaceholderCompletionProvider", () => {
   })
 
   it("includes documentation with class list", () => {
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2" } })
     const provider = new PlaceholderCompletionProvider()
     const doc = createMockDocument('<div class="">')
     const result = provider.provideCompletionItems(doc as never, new Position(0, 12))
@@ -111,7 +98,7 @@ describe("PlaceholderCompletionProvider", () => {
   })
 
   it("invalidates cache on config change", () => {
-    const cleanup1 = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup1 = mockConfig({ placeholders: { btn: "px-4 py-2" } })
     const provider = new PlaceholderCompletionProvider()
     const doc = createMockDocument('<div class="">')
 
@@ -120,7 +107,7 @@ describe("PlaceholderCompletionProvider", () => {
     cleanup1()
 
     // Simulate config change
-    const cleanup2 = setupPlaceholders({ btn: "px-4 py-2", card: "p-6" })
+    const cleanup2 = mockConfig({ placeholders: { btn: "px-4 py-2", card: "p-6" } })
     // Trigger the config change event manually by re-creating
     // The provider listens to onDidChangeConfiguration internally
     const provider2 = new PlaceholderCompletionProvider()

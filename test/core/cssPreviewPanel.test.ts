@@ -9,8 +9,8 @@ import {
   _getLastPanel,
   _reset,
   createMockEditor,
+  mockConfig,
   window,
-  workspace,
 } from "../__mocks__/vscode"
 import { CSSPreviewPanel, findActiveIndex } from "../../src/core/cssPreviewPanel"
 
@@ -327,16 +327,7 @@ describe("handleMessage", () => {
       cursorLine: 0,
     })
 
-    // Override getConfiguration to return false for scrollEditorOnPanelSelect
-    const origGet = workspace.getConfiguration
-    workspace.getConfiguration = (_section?: string) => ({
-      get<T>(key: string, defaultValue: T): T {
-        if (key === "scrollEditorOnPanelSelect") {
-          return false as T
-        }
-        return defaultValue
-      },
-    })
+    const cleanup = mockConfig({ scrollEditorOnPanelSelect: false })
 
     const revealSpy = vi.spyOn(editor!, "revealRange")
     panel._simulateMessage({ index: 0, type: "selectEntry" })
@@ -344,7 +335,7 @@ describe("handleMessage", () => {
     // Should NOT have called revealRange since scroll is disabled
     expect(revealSpy).not.toHaveBeenCalled()
 
-    workspace.getConfiguration = origGet
+    cleanup()
   })
 
   it("ignores messages when no matching editor is found", () => {

@@ -15,3 +15,7 @@ export function debounce<T extends (...args: never[]) => void>(
     },
   }
 }
+
+export function escapeRegex(str: string): string {
+  return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)
+}

@@ -1,6 +1,8 @@
 // eslint-disable-next-line import/no-namespace -- vscode SDK requires namespace import
 import * as vscode from "vscode"
 
+import { escapeRegex } from "../utils/utils"
+
 export const DEFAULT_SUPPORTED_FUNCTIONS = [
   "cn",
   "clsx",
@@ -33,7 +35,7 @@ export function isInsideClassContext(
 
   const funcNames = supportedFunctions
     .filter((fn) => !fn.startsWith("/"))
-    .map((fn) => fn.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`))
+    .map((fn) => escapeRegex(fn))
     .join("|")
 
   if (funcNames.length === 0) {

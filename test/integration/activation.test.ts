@@ -9,7 +9,9 @@ import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
+  type HoverDecoration,
   Position,
+  type PlaceholderDecoration,
   Selection,
   _fireEvent,
   _getCommandHandler,
@@ -20,14 +22,6 @@ import {
 } from "../__mocks__/vscode"
 import { CSSPreviewPanel } from "../../src/core/cssPreviewPanel"
 import { activate } from "../../src/extension"
-
-interface PlaceholderDecoration {
-  renderOptions: { before: { contentText: string } }
-}
-
-interface HoverDecoration {
-  hoverMessage: { value: string }
-}
 
 const projectRoot = path.resolve(__dirname, "../..")
 

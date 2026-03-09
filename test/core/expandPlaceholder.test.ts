@@ -3,27 +3,12 @@ import { beforeEach, describe, expect, it } from "vitest"
 import {
   _reset,
   createMockEditor,
+  mockConfig,
   Position,
   Selection,
   window,
-  workspace,
 } from "../__mocks__/vscode"
 import { expandPlaceholderAtCursor } from "../../src/core/expandPlaceholder"
-
-function setupPlaceholders(placeholders: Record<string, string>) {
-  const origGet = workspace.getConfiguration
-  workspace.getConfiguration = (_section?: string) => ({
-    get<T>(key: string, defaultValue: T): T {
-      if (key === "placeholders") {
-        return placeholders as T
-      }
-      return defaultValue
-    },
-  })
-  return () => {
-    workspace.getConfiguration = origGet
-  }
-}
 
 beforeEach(() => {
   _reset()
@@ -38,7 +23,7 @@ describe("expandPlaceholderAtCursor", () => {
   it("does nothing when placeholders map is empty", () => {
     const editor = createMockEditor('<div class="btn">')
     window.activeTextEditor = editor as typeof window.activeTextEditor
-    const cleanup = setupPlaceholders({})
+    const cleanup = mockConfig({ placeholders: {} })
     expandPlaceholderAtCursor()
     cleanup()
   })
@@ -48,7 +33,7 @@ describe("expandPlaceholderAtCursor", () => {
     const editor = createMockEditor(text)
     editor.selection = new Selection(new Position(0, 13))
     window.activeTextEditor = editor as typeof window.activeTextEditor
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2" } })
 
     expandPlaceholderAtCursor()
     cleanup()
@@ -72,7 +57,7 @@ describe("expandPlaceholderAtCursor", () => {
       return true
     }
 
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2 rounded" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2 rounded" } })
     expandPlaceholderAtCursor()
     cleanup()
 
@@ -96,7 +81,7 @@ describe("expandPlaceholderAtCursor", () => {
       return true
     }
 
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2" } })
     expandPlaceholderAtCursor()
     cleanup()
 
@@ -119,7 +104,7 @@ describe("expandPlaceholderAtCursor", () => {
       return true
     }
 
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2" } })
     expandPlaceholderAtCursor()
     cleanup()
 
@@ -142,7 +127,7 @@ describe("expandPlaceholderAtCursor", () => {
       return true
     }
 
-    const cleanup = setupPlaceholders({ btn: "px-4 py-2" })
+    const cleanup = mockConfig({ placeholders: { btn: "px-4 py-2" } })
     expandPlaceholderAtCursor()
     cleanup()
 

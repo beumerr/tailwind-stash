@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { _fireEvent, _reset, createMockEditor, window, workspace } from "../__mocks__/vscode"
+import {
+  _fireEvent,
+  _reset,
+  createMockEditor,
+  type HoverDecoration,
+  mockConfig,
+  type PlaceholderDecoration,
+  window,
+} from "../__mocks__/vscode"
 import { FoldingManager } from "../../src/core/foldingProvider"
-
-interface PlaceholderDecoration {
-  renderOptions: { before: { contentText: string } }
-}
-
-interface HoverDecoration {
-  hoverMessage: { value: string }
-}
 
 function createManager(editorText?: string, opts?: { cursorLine?: number }) {
   const editor = editorText ? createMockEditor(editorText, opts) : undefined
@@ -179,15 +179,7 @@ describe("updateDecorations", () => {
   })
 
   it("generates 'count-long' placeholder with label", () => {
-    const origGet = workspace.getConfiguration
-    workspace.getConfiguration = (_section?: string) => ({
-      get<T>(key: string, defaultValue: T): T {
-        if (key === "placeholderStyle") {
-          return "count-long" as T
-        }
-        return defaultValue
-      },
-    })
+    const cleanup = mockConfig({ placeholderStyle: "count-long" })
 
     const text = `<div>
 <span class="flex items-center p-4 rounded">`
@@ -201,19 +193,11 @@ describe("updateDecorations", () => {
     const decoration = placeholderCall!.decorations[0] as PlaceholderDecoration
     expect(decoration.renderOptions.before.contentText).toBe("4 classes")
 
-    workspace.getConfiguration = origGet
+    cleanup()
   })
 
   it("generates 'empty' placeholder with ellipsis", () => {
-    const origGet = workspace.getConfiguration
-    workspace.getConfiguration = (_section?: string) => ({
-      get<T>(key: string, defaultValue: T): T {
-        if (key === "placeholderStyle") {
-          return "empty" as T
-        }
-        return defaultValue
-      },
-    })
+    const cleanup = mockConfig({ placeholderStyle: "empty" })
 
     const text = `<div>
 <span class="flex items-center p-4 rounded">`
@@ -227,19 +211,11 @@ describe("updateDecorations", () => {
     const decoration = placeholderCall!.decorations[0] as PlaceholderDecoration
     expect(decoration.renderOptions.before.contentText).toBe("…")
 
-    workspace.getConfiguration = origGet
+    cleanup()
   })
 
   it("falls back to count for unknown placeholder style", () => {
-    const origGet = workspace.getConfiguration
-    workspace.getConfiguration = (_section?: string) => ({
-      get<T>(key: string, defaultValue: T): T {
-        if (key === "placeholderStyle") {
-          return "unknown-style" as T
-        }
-        return defaultValue
-      },
-    })
+    const cleanup = mockConfig({ placeholderStyle: "unknown-style" })
 
     const text = `<div>
 <span class="flex items-center p-4 rounded">`
@@ -253,22 +229,11 @@ describe("updateDecorations", () => {
     const decoration = placeholderCall!.decorations[0] as PlaceholderDecoration
     expect(decoration.renderOptions.before.contentText).toBe("4")
 
-    workspace.getConfiguration = origGet
+    cleanup()
   })
 
   it("generates 'count-long' singular for 1 class", () => {
-    const origGet = workspace.getConfiguration
-    workspace.getConfiguration = (_section?: string) => ({
-      get<T>(key: string, defaultValue: T): T {
-        if (key === "placeholderStyle") {
-          return "count-long" as T
-        }
-        if (key === "minClassCount") {
-          return 1 as T
-        }
-        return defaultValue
-      },
-    })
+    const cleanup = mockConfig({ minClassCount: 1, placeholderStyle: "count-long" })
 
     const text = `<div>
 <span class="flex">`
@@ -282,7 +247,7 @@ describe("updateDecorations", () => {
     const decoration = placeholderCall!.decorations[0] as PlaceholderDecoration
     expect(decoration.renderOptions.before.contentText).toBe("1 class")
 
-    workspace.getConfiguration = origGet
+    cleanup()
   })
 
   it("includes hover message with class list", () => {
