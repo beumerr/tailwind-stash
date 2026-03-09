@@ -162,6 +162,7 @@ export class MarkdownString {
 
 export interface MockDocument {
   getText: (range?: Range) => string
+  getWordRangeAtPosition: (position: Position, regex?: RegExp) => Range | undefined
   positionAt: (offset: number) => Position
   uri?: { scheme: string; toString: () => string }
 }
@@ -180,6 +181,24 @@ export function createMockDocument(text: string): MockDocument {
         lines.slice(0, range.end.line).reduce((sum, l) => sum + l.length + 1, 0) +
         range.end.character
       return text.slice(startOffset, endOffset)
+    },
+    getWordRangeAtPosition(position: Position, regex?: RegExp): Range | undefined {
+      const line = lines[position.line]
+      if (!line) {
+        return undefined
+      }
+      const pattern = regex ?? /\w+/g
+      const flags = pattern.flags.includes("g") ? pattern.flags : pattern.flags + "g"
+      const re = new RegExp(pattern.source, flags)
+      let m: null | RegExpExecArray
+      while ((m = re.exec(line)) !== null) {
+        const start = m.index
+        const end = start + m[0].length
+        if (position.character >= start && position.character <= end) {
+          return new Range(new Position(position.line, start), new Position(position.line, end))
+        }
+      }
+      return undefined
     },
     positionAt(offset: number): Position {
       let line = 0
@@ -250,6 +269,26 @@ export function createMockEditor(text: string, opts?: { cursorLine?: number; uri
     viewColumn: 1,
   }
   return editor
+}
+
+export enum CompletionItemKind {
+  Snippet = 15,
+}
+
+export class CompletionItem {
+  detail?: string
+  documentation?: MarkdownString
+  insertText?: string
+  constructor(
+    public label: string,
+    public kind?: CompletionItemKind,
+  ) {}
+}
+
+export const languages = {
+  registerCompletionItemProvider(_selector: unknown, _provider: unknown) {
+    return { dispose() {} }
+  },
 }
 
 export const commands = {
