@@ -13,6 +13,7 @@ Collapses class strings into a compact placeholder. Hover over the collapsed tex
 - **count** (default): `class="6"`
 - **count-long**: `class="6 classes"`
 - **empty**: `class="…"`
+- **placeholder labels**: `class="btn +2"` (when placeholders are configured)
 
 ```html
 <!-- Before collapsing -->
@@ -23,6 +24,28 @@ Collapses class strings into a compact placeholder. Hover over the collapsed tex
 ```
 
 The line the cursor is on is always expanded, so you can read and edit classes normally.
+
+### Placeholder Labels
+
+Map short names to class strings for meaningful fold labels. When a class string contains all classes from a placeholder, the label is shown instead of the count. Multiple placeholders can match simultaneously.
+
+```jsonc
+// settings.json
+"tailwindStash.placeholders": {
+  "btn": "px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700",
+  "flex-center": "flex justify-center items-center"
+}
+```
+
+```html
+<!-- class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 flex justify-center items-center mt-4" -->
+<!-- Folds to: -->
+<div class="btn flex-center +1">
+```
+
+The format is configurable via `tailwindStash.placeholderFormat` (default: `{keys} +{rest}`). The `+{rest}` portion is hidden when there are no extra classes.
+
+Placeholder keys also appear as **autocomplete suggestions** when typing inside class attributes, and can be expanded into full class strings with the **Expand Placeholder** command (`Alt+Shift+X`).
 
 ### Class Editor Panel
 
@@ -44,6 +67,7 @@ All commands are available via the Command Palette (`Ctrl+Shift+P`):
 | Tailwind Stash: Show Class Editor Panel | Open the class editor panel |
 | Tailwind Stash: Hide Class Editor Panel | Close the class editor panel |
 | Tailwind Stash: Toggle Class Editor Panel | Toggle the class editor panel |
+| Tailwind Stash: Expand Placeholder | Expand the placeholder key at the cursor into its full class string |
 
 ### Default Keyboard Shortcuts
 
@@ -54,6 +78,7 @@ All commands are available via the Command Palette (`Ctrl+Shift+P`):
 | `Alt+Shift+E` | Expand All Classnames |
 | `Alt+Shift+P` | Show Class Editor Panel |
 | `Alt+Shift+L` | Toggle Class Editor Panel |
+| `Alt+Shift+X` | Expand Placeholder |
 
 All shortcuts are configurable — either through VS Code's keyboard shortcuts settings (`Ctrl+K Ctrl+S`) or via the extension settings below.
 
@@ -88,6 +113,8 @@ This list is fully configurable via the `tailwindStash.supportedFunctions` setti
 | `tailwindStash.placeholderStyle` | `"count"` | Placeholder style: `count` (`3`), `count-long` (`3 classes`), or `empty` (`…`) |
 | `tailwindStash.minClassCount` | `4` | Minimum number of classes before collapsing kicks in |
 | `tailwindStash.extraLanguages` | `[]` | (Experimental) Additional language IDs to enable collapsing for. Requires reload. |
+| `tailwindStash.placeholders` | `{}` | Map of short labels to Tailwind class strings for smart fold placeholders and autocomplete |
+| `tailwindStash.placeholderFormat` | `"{keys} +{rest}"` | Format template for matched placeholder labels. `{keys}` = matched names, `{rest}` = extra class count |
 | `tailwindStash.supportedFunctions` | `["cn", "clsx", ...]` | Function names (or `/regex/` patterns) that wrap Tailwind classes |
 
 ### Panel
@@ -118,6 +145,7 @@ These settings let you change keybindings without opening VS Code's keyboard sho
 | `tailwindStash.shortcutShowPanel` | `"alt+shift+p"` | Keyboard shortcut for Show Class Editor Panel |
 | `tailwindStash.shortcutHidePanel` | `""` | Keyboard shortcut for Hide Class Editor Panel |
 | `tailwindStash.shortcutTogglePanel` | `"alt+shift+l"` | Keyboard shortcut for Toggle Class Editor Panel |
+| `tailwindStash.shortcutExpandPlaceholder` | `"alt+shift+x"` | Keyboard shortcut for Expand Placeholder |
 
 ## Contributing
 
