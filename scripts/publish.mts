@@ -123,7 +123,7 @@ step("Formatting", () => run("npm run format:check"))
 step("Linting", () => run("npm run lint"))
 step("Type checking", () => run("npm run typecheck"))
 step("Compiling", () => run("npm run compile"))
-step("Testing", () => run("npm test"))
+step("Testing", () => run("npm run test:unit"))
 
 if (failed) {
   process.stderr.write("\n✗ Quality checks failed. Fix the issues above before publishing.\n")
