@@ -49,12 +49,13 @@ describe("activate", () => {
     expect(_getCommandHandler("tailwindStash.toggleCssPreview")).toBeDefined()
   })
 
-  it("registers all 6 commands", () => {
+  it("registers all 7 commands", () => {
     const ctx = makeContext()
     activate(ctx)
     const commands = [
       "tailwindStash.collapseAll",
       "tailwindStash.expandAll",
+      "tailwindStash.expandPlaceholder",
       "tailwindStash.toggleCollapse",
       "tailwindStash.showCssPreview",
       "tailwindStash.hideCssPreview",
@@ -68,8 +69,8 @@ describe("activate", () => {
   it("pushes subscriptions onto the context", () => {
     const ctx = makeContext()
     activate(ctx)
-    // 6 commands + 1 foldingManager
-    expect(ctx.subscriptions.length).toBeGreaterThanOrEqual(7)
+    // 7 commands + 1 foldingManager + 1 completionProvider
+    expect(ctx.subscriptions.length).toBeGreaterThanOrEqual(9)
   })
 })
 

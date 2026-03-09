@@ -4,6 +4,19 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] - 2026-03-09
+
+### Added
+
+- README documentation for placeholder labels, expand command, and new settings
+
+### Changed
+
+- Extract `escapeRegex` to shared utils module, reuse across classContext and classDetector
+- Add `mockConfig` test helper to deduplicate config overrides across test files
+- Export shared test interfaces (`PlaceholderDecoration`, `HoverDecoration`) from vscode mock
+- Update extension tests to verify all 7 commands and 9 subscriptions
+
 ## [0.2.0] - 2026-03-09
 
 ### Added

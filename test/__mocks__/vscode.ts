@@ -387,6 +387,35 @@ export const workspace = {
   onDidChangeTextDocument: makeEventEmitter("onDidChangeTextDocument"),
 }
 
+// ─── Shared test helpers ─────────────────────────────────────────────
+
+export interface PlaceholderDecoration {
+  renderOptions: { before: { contentText: string } }
+}
+
+export interface HoverDecoration {
+  hoverMessage: { value: string }
+}
+
+/**
+ * Override workspace.getConfiguration to return specific values.
+ * Returns a cleanup function that restores the original.
+ */
+export function mockConfig(overrides: Record<string, unknown>) {
+  const origGet = workspace.getConfiguration
+  workspace.getConfiguration = (_section?: string) => ({
+    get<T>(key: string, defaultValue: T): T {
+      if (key in overrides) {
+        return overrides[key] as T
+      }
+      return defaultValue
+    },
+  })
+  return () => {
+    workspace.getConfiguration = origGet
+  }
+}
+
 export const ViewColumn = {
   Beside: 2,
 }

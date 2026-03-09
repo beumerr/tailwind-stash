@@ -1,6 +1,8 @@
 // eslint-disable-next-line import/no-namespace -- vscode SDK requires namespace import
 import * as vscode from "vscode"
 
+import { escapeRegex } from "../utils/utils"
+
 export interface ClassRange {
   /** Individual class names */
   classes: string[]
@@ -207,10 +209,6 @@ function findMatchingParen(text: string, openIndex: number): number {
     }
   }
   return -1
-}
-
-function escapeRegex(str: string): string {
-  return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)
 }
 
 function deduplicateRanges(ranges: ClassRange[]): ClassRange[] {
