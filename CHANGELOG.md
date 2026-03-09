@@ -4,6 +4,29 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-03-09
+
+### Added
+
+- Configurable placeholder labels: map short names to class strings via `placeholders` setting
+- Smart fold display: matched placeholders shown as labels (e.g. `btn flex-center +2`) with multi-match support
+- Configurable placeholder format via `placeholderFormat` setting (default: `{keys} +{rest}`)
+- Expand Placeholder command (`Alt+Shift+X`): replaces a placeholder key with its full class string inside class attributes
+- Autocomplete suggestions for placeholder keys inside class attributes and supported function calls
+- Shared `classContext` module to deduplicate class attribute detection logic
+- 30 new tests (327 total unit tests)
+- E2E smoke tests for new command and configuration defaults
+- E2E tests in publish workflow (min version + stable)
+
+### Changed
+
+- Branch protection enabled on master with required status checks (build, E2E)
+- Disable installed extension in debug launch config to prevent conflicts
+
+### Fixed
+
+- Remove `settings.local.json` from git tracking (user-specific file)
+
 ## [0.1.5] - 2026-03-07
 
 ### Fixed
