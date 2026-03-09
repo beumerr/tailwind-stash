@@ -2,7 +2,9 @@
 import * as vscode from "vscode"
 
 import { debounce } from "../utils/utils"
+import { DEFAULT_SUPPORTED_FUNCTIONS } from "./classContext"
 import { ClassRange, detectClassRanges } from "./classDetector"
+import { formatPlaceholder, matchPlaceholders } from "./placeholderMatcher"
 
 /** Manages horizontal collapse decorations */
 export class FoldingManager {
@@ -17,6 +19,8 @@ export class FoldingManager {
   private cachedConfig: {
     foldedTextColor: string
     minClassCount: number
+    placeholderFormat: string
+    placeholders: Record<string, string>
     placeholderStyle: string
     supportedFunctions: string[]
   } | null = null
@@ -125,21 +129,20 @@ export class FoldingManager {
       this.cachedConfig = {
         foldedTextColor: config.get<string>("foldedTextColor", ""),
         minClassCount: config.get<number>("minClassCount", 4),
+        placeholderFormat: config.get<string>("placeholderFormat", "{keys} +{rest}"),
+        placeholders: config.get<Record<string, string>>("placeholders", {}),
         placeholderStyle: config.get<string>("placeholderStyle", "count"),
-        supportedFunctions: config.get<string[]>("supportedFunctions", [
-          "cn",
-          "clsx",
-          "cva",
-          "cx",
-          "twMerge",
-          "twJoin",
-          "classNames",
-          "classnames",
-        ]),
+        supportedFunctions: config.get<string[]>("supportedFunctions", DEFAULT_SUPPORTED_FUNCTIONS),
       }
     }
-    const { foldedTextColor, minClassCount, placeholderStyle, supportedFunctions } =
-      this.cachedConfig
+    const {
+      foldedTextColor,
+      minClassCount,
+      placeholderFormat,
+      placeholders,
+      placeholderStyle,
+      supportedFunctions,
+    } = this.cachedConfig
 
     const ranges = detectClassRanges(editor.document, supportedFunctions, minClassCount)
     this.classRanges.set(editor.document.uri.toString(), ranges)
@@ -150,20 +153,30 @@ export class FoldingManager {
       (cr) => cursorLine < cr.range.start.line || cursorLine > cr.range.end.line,
     )
 
+    const hasPlaceholders = Object.keys(placeholders).length > 0
+
     const decorations: vscode.DecorationOptions[] = visibleRanges.map((cr) => {
       let placeholder: string
-      switch (placeholderStyle) {
-        case "count":
-          placeholder = `${cr.classes.length}`
-          break
-        case "count-long":
-          placeholder = `${cr.classes.length} ${cr.classes.length === 1 ? "class" : "classes"}`
-          break
-        case "empty":
-          placeholder = "…"
-          break
-        default:
-          placeholder = `${cr.classes.length}`
+
+      // Try placeholder matching first
+      const match = hasPlaceholders ? matchPlaceholders(cr.classes, placeholders) : null
+
+      if (match) {
+        placeholder = formatPlaceholder(match, placeholderFormat)
+      } else {
+        switch (placeholderStyle) {
+          case "count":
+            placeholder = `${cr.classes.length}`
+            break
+          case "count-long":
+            placeholder = `${cr.classes.length} ${cr.classes.length === 1 ? "class" : "classes"}`
+            break
+          case "empty":
+            placeholder = "…"
+            break
+          default:
+            placeholder = `${cr.classes.length}`
+        }
       }
       return {
         hoverMessage: new vscode.MarkdownString(
