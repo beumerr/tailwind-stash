@@ -4,6 +4,18 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.3] - 2026-03-13
+
+### Changed
+
+- Bump oxlint 1.51.0 → 1.55.0
+- Bump oxfmt 0.36.0 → 0.40.0
+- Bump esbuild 0.27.3 → 0.27.4
+- Bump preact 10.28.4 → 10.29.0
+- Bump vitest 4.0.18 → 4.1.0
+- Bump @vitest/coverage-v8 4.0.18 → 4.1.0
+- Bump happy-dom 20.8.3 → 20.8.4
+
 ## [0.2.2] - 2026-03-10
 
 ### Fixed
