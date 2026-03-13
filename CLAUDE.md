@@ -81,6 +81,11 @@ Rules:
 - `engines.vscode` and `@types/vscode` must always match. Update both when changing the minimum.
 - CI runs E2E tests against 1.66.0 and latest stable.
 
+### Git workflow
+
+- **Never push directly to master.** Branch protection requires a pull request with all status checks passing.
+- Always create a branch, push it, open a PR via `gh pr create`, wait for CI, then merge via `gh pr merge`.
+
 ### Message protocol
 
 Extension <-> Webview communication uses postMessage. When adding new message types:
