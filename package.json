@@ -284,7 +284,7 @@
     "@types/mocha": "^10.0.0",
     "@types/node": "^20.19.37",
     "@types/vscode": "~1.66.0",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "@vscode/test-electron": "^2.5.2",
     "esbuild": "^0.27.3",
     "eslint-plugin-better-tailwindcss": "^4.3.2",
