@@ -22,6 +22,7 @@ Create a pull request for the current branch.
 8. Create the PR using `gh pr create`:
    - Derive the title from the branch name (e.g. `feat/class-sorting` becomes "Add class sorting").
    - Generate the PR body following the template in `.github/pull_request_template.md`. Fill in the summary, changes list, and check the appropriate type and checklist boxes.
+   - If the branch or commits reference a GitHub issue number, include `Closes #N` in the "Related issues" section of the PR body. This must be present at merge time for GitHub to auto-close the issue.
    - Target `master`.
 9. Print the PR URL.
 
