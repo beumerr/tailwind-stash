@@ -216,6 +216,34 @@ export function createMockDocument(text: string): MockDocument {
   }
 }
 
+// ─── EventEmitter mock ──────────────────────────────────────────────
+
+export class EventEmitter<T> {
+  private listeners: ((e: T) => void)[] = []
+
+  event = (listener: (e: T) => void) => {
+    this.listeners.push(listener)
+    return {
+      dispose: () => {
+        const idx = this.listeners.indexOf(listener)
+        if (idx >= 0) {
+          this.listeners.splice(idx, 1)
+        }
+      },
+    }
+  }
+
+  fire(data: T) {
+    for (const listener of this.listeners) {
+      listener(data)
+    }
+  }
+
+  dispose() {
+    this.listeners = []
+  }
+}
+
 // ─── Mock registries for testing ────────────────────────────────────
 
 const commandHandlers = new Map<string, (...args: unknown[]) => unknown>()
@@ -224,6 +252,7 @@ const eventListeners = {
   onDidChangeConfiguration: [] as ((...args: unknown[]) => void)[],
   onDidChangeTextDocument: [] as ((...args: unknown[]) => void)[],
   onDidChangeTextEditorSelection: [] as ((...args: unknown[]) => void)[],
+  onDidChangeVisibleTextEditors: [] as ((...args: unknown[]) => void)[],
 }
 
 export function _reset() {
@@ -370,6 +399,7 @@ export const window = {
   },
   onDidChangeActiveTextEditor: makeEventEmitter("onDidChangeActiveTextEditor"),
   onDidChangeTextEditorSelection: makeEventEmitter("onDidChangeTextEditorSelection"),
+  onDidChangeVisibleTextEditors: makeEventEmitter("onDidChangeVisibleTextEditors"),
   showInformationMessage(_msg: string) {},
   showTextDocument() {},
   visibleTextEditors: [] as unknown[],

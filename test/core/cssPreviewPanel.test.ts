@@ -2,6 +2,7 @@ import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
+  EventEmitter,
   Position,
   Range,
   Selection,
@@ -15,6 +16,7 @@ import {
 import { CSSPreviewPanel, findActiveIndex } from "../../src/core/cssPreviewPanel"
 
 const extensionPath = path.resolve(__dirname, "../..")
+const noopEvent = new EventEmitter<string>().event
 
 function makeClassRange(
   startLine: number,
@@ -46,9 +48,10 @@ function createPanelWithEditor(text?: string, opts?: { cursorLine?: number }) {
     return [makeClassRange(0, 12, 0, 41, ["flex", "items-center", "p-4", "rounded"], "div")]
   })
 
-  CSSPreviewPanel.createOrShow(extensionPath, getClassRanges)
+  const rangesEmitter = new EventEmitter<string>()
+  CSSPreviewPanel.createOrShow(extensionPath, getClassRanges, rangesEmitter.event)
   const panel = _getLastPanel()!
-  return { editor, getClassRanges, panel }
+  return { editor, getClassRanges, panel, rangesEmitter }
 }
 
 beforeEach(() => {
@@ -153,7 +156,7 @@ describe("createOrShow", () => {
     createPanelWithEditor('<div class="flex items-center p-4 rounded">')
     const firstPanel = _getLastPanel()
 
-    CSSPreviewPanel.createOrShow(extensionPath, () => [])
+    CSSPreviewPanel.createOrShow(extensionPath, () => [], noopEvent)
     // Should not have created a new panel
     expect(_getLastPanel()).toBe(firstPanel)
   })
@@ -202,15 +205,15 @@ describe("hide", () => {
 describe("toggle", () => {
   it("creates panel when none exists", () => {
     window.activeTextEditor = undefined
-    CSSPreviewPanel.toggle(extensionPath, () => [])
+    CSSPreviewPanel.toggle(extensionPath, () => [], noopEvent)
     expect(CSSPreviewPanel.currentPanel).toBeDefined()
   })
 
   it("disposes panel when one exists", () => {
-    CSSPreviewPanel.toggle(extensionPath, () => [])
+    CSSPreviewPanel.toggle(extensionPath, () => [], noopEvent)
     expect(CSSPreviewPanel.currentPanel).toBeDefined()
 
-    CSSPreviewPanel.toggle(extensionPath, () => [])
+    CSSPreviewPanel.toggle(extensionPath, () => [], noopEvent)
     expect(CSSPreviewPanel.currentPanel).toBeUndefined()
   })
 })
@@ -399,8 +402,11 @@ describe("updateForEditor", () => {
     })
     const messagesBefore = panel._getMessages().length
 
-    // Fire the same selection event again (same line, same content)
-    _fireEvent("onDidChangeActiveTextEditor", editor)
+    // Fire selection change with same line — triggers updateForEditor with same content key
+    _fireEvent("onDidChangeTextEditorSelection", {
+      selections: [{ active: { line: 0 } }],
+      textEditor: editor,
+    })
 
     const newMessages = panel._getMessages().slice(messagesBefore)
     // Should not send a duplicate update
@@ -409,46 +415,52 @@ describe("updateForEditor", () => {
   })
 })
 
-// ─── text document change debounce ──────────────────────────────────
+// ─── onDidUpdateRanges event-driven sync ────────────────────────────
 
-describe("text document changes", () => {
-  it("debounces text document changes and clears content key", () => {
-    vi.useFakeTimers()
-    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
-      cursorLine: 0,
-    })
+describe("onDidUpdateRanges event-driven sync", () => {
+  it("updates panel when onDidUpdateRanges fires for current URI", () => {
+    const { getClassRanges, panel, rangesEmitter } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
     const messagesBefore = panel._getMessages().length
 
-    _fireEvent("onDidChangeTextDocument", { document: editor!.document })
+    // Simulate ranges changing (different class list)
+    getClassRanges.mockReturnValue([
+      makeClassRange(0, 12, 0, 30, ["flex", "p-4", "rounded", "mt-2"], "div"),
+    ])
+    rangesEmitter.fire("file:///test.tsx")
 
-    // Should not have updated yet (debounced)
-    expect(panel._getMessages().length).toBe(messagesBefore)
-
-    vi.advanceTimersByTime(200)
-
-    // After debounce, should have sent an update (content key was cleared)
     const newMessages = panel._getMessages().slice(messagesBefore)
     const updateMsg = newMessages.find((m) => m.type === "update")
     expect(updateMsg).toBeDefined()
-    vi.useRealTimers()
   })
 
-  it("ignores text changes for a different document", () => {
-    vi.useFakeTimers()
-    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
-      cursorLine: 0,
-    })
+  it("skips update when onDidUpdateRanges fires but ranges are unchanged", () => {
+    const { panel, rangesEmitter } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
     const messagesBefore = panel._getMessages().length
 
-    // Fire a text change for a different document
-    _fireEvent("onDidChangeTextDocument", {
-      document: { uri: { toString: () => "file:///other.tsx" } },
-    })
-    vi.advanceTimersByTime(200)
+    // Fire event without changing getClassRanges — ranges are identical
+    rangesEmitter.fire("file:///test.tsx")
 
-    // Should not have sent any new messages
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const updateMsgs = newMessages.filter((m) => m.type === "update")
+    expect(updateMsgs).toHaveLength(0)
+  })
+
+  it("ignores onDidUpdateRanges for a different URI", () => {
+    const { panel, rangesEmitter } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
+    const messagesBefore = panel._getMessages().length
+
+    rangesEmitter.fire("file:///other.tsx")
+
     expect(panel._getMessages().length).toBe(messagesBefore)
-    vi.useRealTimers()
   })
 
   it("skips editor changes for output scheme", () => {
@@ -490,7 +502,7 @@ describe("text document changes", () => {
 
 describe("updateForEditor content key caching", () => {
   it("sends only setActive when content is unchanged but active index changes", () => {
-    const { editor, getClassRanges, panel } = createPanelWithEditor(
+    const { editor, getClassRanges, panel, rangesEmitter } = createPanelWithEditor(
       '<div class="flex items-center p-4 rounded">',
       { cursorLine: 0 },
     )
@@ -500,14 +512,17 @@ describe("updateForEditor content key caching", () => {
     const range2 = makeClassRange(2, 13, 2, 48, ["text-sm", "font-bold", "mt-2", "mx-auto"], "span")
     getClassRanges.mockReturnValue([range1, range2])
 
-    // First update at line 0
+    // First update via event
     editor!.selection = { active: { line: 0 } } as unknown as Selection
-    _fireEvent("onDidChangeActiveTextEditor", editor)
+    rangesEmitter.fire("file:///test.tsx")
     const messagesAfterFirst = panel._getMessages().length
 
-    // Second update at line 2 (same content, different active)
+    // Second update at line 2 (same content, different active) via selection change
     editor!.selection = { active: { line: 2 } } as unknown as Selection
-    _fireEvent("onDidChangeActiveTextEditor", editor)
+    _fireEvent("onDidChangeTextEditorSelection", {
+      selections: [{ active: { line: 2 } }],
+      textEditor: editor,
+    })
 
     const newMessages = panel._getMessages().slice(messagesAfterFirst)
     const setActiveMsgs = newMessages.filter((m) => m.type === "setActive")
@@ -712,7 +727,7 @@ describe("regression: panel shows classes on open (ready message)", () => {
     window.activeTextEditor = editor
     window.visibleTextEditors = [editor]
 
-    CSSPreviewPanel.createOrShow(extensionPath, () => [])
+    CSSPreviewPanel.createOrShow(extensionPath, () => [], noopEvent)
     const panel = _getLastPanel()!
 
     const messagesBefore = panel._getMessages().length
@@ -724,12 +739,12 @@ describe("regression: panel shows classes on open (ready message)", () => {
   })
 })
 
-describe("regression: visibleTextEditors for text document changes", () => {
+describe("regression: onDidUpdateRanges finds editor via visibleTextEditors", () => {
   it("uses visibleTextEditors to find editor when activeTextEditor is undefined", () => {
-    vi.useFakeTimers()
-    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
-      cursorLine: 0,
-    })
+    const { editor, getClassRanges, panel, rangesEmitter } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
     const messagesBefore = panel._getMessages().length
 
     // Simulate webview having focus — activeTextEditor is undefined
@@ -737,29 +752,28 @@ describe("regression: visibleTextEditors for text document changes", () => {
     // But the editor is still visible
     window.visibleTextEditors = [editor!]
 
-    _fireEvent("onDidChangeTextDocument", { document: editor!.document })
-    vi.advanceTimersByTime(200)
+    // Change ranges so content key differs
+    getClassRanges.mockReturnValue([
+      makeClassRange(0, 12, 0, 30, ["flex", "p-4", "rounded", "mt-2"], "div"),
+    ])
+    rangesEmitter.fire("file:///test.tsx")
 
     // Should still have found the editor and sent an update
     const newMessages = panel._getMessages().slice(messagesBefore)
     const updateMsg = newMessages.find((m) => m.type === "update")
     expect(updateMsg).toBeDefined()
-    vi.useRealTimers()
   })
 
-  it("ignores text changes for documents not in visibleTextEditors", () => {
-    vi.useFakeTimers()
-    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
-      cursorLine: 0,
-    })
+  it("ignores onDidUpdateRanges for URIs not matching currentEditorUri", () => {
+    const { panel, rangesEmitter } = createPanelWithEditor(
+      '<div class="flex items-center p-4 rounded">',
+      { cursorLine: 0 },
+    )
     const messagesBefore = panel._getMessages().length
 
-    // Fire a text change for a document that is not in any visible editor
-    const otherDoc = { uri: { toString: () => "file:///other.tsx" } }
-    _fireEvent("onDidChangeTextDocument", { document: otherDoc })
-    vi.advanceTimersByTime(200)
+    // Fire for a different URI
+    rangesEmitter.fire("file:///other.tsx")
 
     expect(panel._getMessages().length).toBe(messagesBefore)
-    vi.useRealTimers()
   })
 })

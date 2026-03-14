@@ -8,6 +8,8 @@ import { formatPlaceholder, matchPlaceholders } from "./placeholderMatcher"
 
 /** Manages horizontal collapse decorations */
 export class FoldingManager {
+  private readonly _onDidUpdateRanges = new vscode.EventEmitter<string>()
+  readonly onDidUpdateRanges: vscode.Event<string> = this._onDidUpdateRanges.event
   private enabled: boolean
   private disposables: vscode.Disposable[] = []
   private classRanges: Map<string, ClassRange[]> = new Map()
@@ -16,6 +18,7 @@ export class FoldingManager {
   private selectionDebounce: { cancel: () => void; fn: (editor: vscode.TextEditor) => void }
   private textChangeDebounce: { cancel: () => void; fn: (editor: vscode.TextEditor) => void }
   private lastCursorLine: number = -1
+  private lastRangeKeys: Map<string, string> = new Map()
   private cachedConfig: {
     foldedTextColor: string
     minClassCount: number
@@ -44,11 +47,12 @@ export class FoldingManager {
     }, 150)
 
     this.disposables.push(
-      vscode.window.onDidChangeActiveTextEditor((editor) => {
-        if (editor) {
-          this.lastCursorLine = -1
-          this.updateDecorations(editor)
-        }
+      vscode.window.onDidChangeActiveTextEditor(() => {
+        this.lastCursorLine = -1
+        this.updateAllVisibleEditors()
+      }),
+      vscode.window.onDidChangeVisibleTextEditors(() => {
+        this.updateAllVisibleEditors()
       }),
       vscode.workspace.onDidChangeTextDocument((e) => {
         const editor =
@@ -85,18 +89,12 @@ export class FoldingManager {
           const updatedConfig = vscode.workspace.getConfiguration("tailwindStash")
           this.enabled = updatedConfig.get<boolean>("foldByDefault", true)
           this.cachedConfig = null
-          const editor = vscode.window.activeTextEditor
-          if (editor) {
-            this.updateDecorations(editor)
-          }
+          this.updateAllVisibleEditors()
         }
       }),
     )
 
-    const editor = vscode.window.activeTextEditor
-    if (editor) {
-      this.updateDecorations(editor)
-    }
+    this.updateAllVisibleEditors()
   }
 
   toggle() {
@@ -105,10 +103,7 @@ export class FoldingManager {
 
   setEnabled(value: boolean) {
     this.enabled = value
-    const editor = vscode.window.activeTextEditor
-    if (editor) {
-      this.updateDecorations(editor)
-    }
+    this.updateAllVisibleEditors()
     vscode.window.showInformationMessage(
       `Tailwind Stash: ${this.enabled ? "Collapsed" : "Expanded"}`,
     )
@@ -116,6 +111,12 @@ export class FoldingManager {
 
   getClassRanges(uri: string): ClassRange[] {
     return this.classRanges.get(uri) ?? []
+  }
+
+  updateAllVisibleEditors() {
+    for (const editor of vscode.window.visibleTextEditors) {
+      this.updateDecorations(editor)
+    }
   }
 
   updateDecorations(editor: vscode.TextEditor) {
@@ -146,7 +147,17 @@ export class FoldingManager {
     } = this.cachedConfig
 
     const ranges = detectClassRanges(editor.document, supportedFunctions, minClassCount)
-    this.classRanges.set(editor.document.uri.toString(), ranges)
+    const uri = editor.document.uri.toString()
+    this.classRanges.set(uri, ranges)
+
+    const rangeKey = ranges
+      .map(
+        (cr) =>
+          `${cr.range.start.line}:${cr.range.start.character}-${cr.range.end.line}:${cr.range.end.character}:${cr.classes.join(",")}`,
+      )
+      .join("|")
+    const rangesChanged = this.lastRangeKeys.get(uri) !== rangeKey
+    this.lastRangeKeys.set(uri, rangeKey)
 
     // Skip collapsing any range the cursor is currently on
     const cursorLine = editor.selection.active.line
@@ -199,9 +210,13 @@ export class FoldingManager {
       this.hideType,
       visibleRanges.map((cr) => ({ range: cr.range })),
     )
+    if (rangesChanged) {
+      this._onDidUpdateRanges.fire(uri)
+    }
   }
 
   dispose() {
+    this._onDidUpdateRanges.dispose()
     this.placeholderType.dispose()
     this.hideType.dispose()
     this.selectionDebounce.cancel()
