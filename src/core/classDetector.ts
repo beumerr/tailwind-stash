@@ -12,6 +12,21 @@ export interface ClassRange {
   range: vscode.Range
 }
 
+const warnedInvalidSupportedFunctionPatterns = new Set<string>()
+
+function warnInvalidSupportedFunctionPattern(pattern: string, error: unknown) {
+  if (warnedInvalidSupportedFunctionPatterns.has(pattern)) {
+    return
+  }
+
+  warnedInvalidSupportedFunctionPatterns.add(pattern)
+
+  const suffix = error instanceof Error && error.message ? `: ${error.message}` : ""
+  vscode.window.showWarningMessage(
+    `Tailwind Stash: invalid supportedFunctions regex "${pattern}" was ignored${suffix}`,
+  )
+}
+
 /**
  * Detects Tailwind class strings in a document, including those wrapped
  * in utility functions like cn(), clsx(), cva(), twMerge(), etc.
@@ -53,6 +68,12 @@ export function detectClassRanges(
       // Strip ^/$ anchors — they don't work inside a group in a larger regex.
       // Use \b boundaries instead for correct matching.
       const cleaned = regexMatch[1].replace(/^\^/, "").replace(/\$$/, "")
+      try {
+        new RegExp(cleaned)
+      } catch (error) {
+        warnInvalidSupportedFunctionPattern(fn, error)
+        continue
+      }
       regexPatterns.push(`\\b${cleaned}`)
     } else {
       literalNames.push(escapeRegex(fn))

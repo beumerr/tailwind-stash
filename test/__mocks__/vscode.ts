@@ -371,6 +371,7 @@ export const window = {
   onDidChangeActiveTextEditor: makeEventEmitter("onDidChangeActiveTextEditor"),
   onDidChangeTextEditorSelection: makeEventEmitter("onDidChangeTextEditorSelection"),
   showInformationMessage(_msg: string) {},
+  showWarningMessage(_msg: string) {},
   showTextDocument() {},
   visibleTextEditors: [] as unknown[],
 }

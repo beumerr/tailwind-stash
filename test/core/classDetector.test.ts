@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { createMockDocument } from "../__mocks__/vscode"
+import { createMockDocument, window } from "../__mocks__/vscode"
 import { detectClassRanges } from "../../src/core/classDetector"
 
 const defaultFunctions = [
@@ -13,6 +13,10 @@ const defaultFunctions = [
   "classNames",
   "classnames",
 ]
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 function detect(text: string, opts?: { functions?: string[]; minClasses?: number }) {
   const doc = createMockDocument(text)
@@ -430,6 +434,36 @@ describe("empty and invalid function patterns", () => {
     const results = detect('<div class="flex items-center p-4 rounded">', { functions: [] })
     expect(results).toHaveLength(1)
     expect(results[0].element).toBe("div")
+  })
+
+  it("warns once and keeps valid detections when a regex pattern is invalid", () => {
+    const warningSpy = vi.spyOn(window, "showWarningMessage")
+    const text = `
+const a = cn("flex items-center p-4 rounded");
+const b = getButtonClasses("grid gap-4 p-6 bg-white");
+<div class="text-sm font-bold mt-2 mx-auto"></div>
+`
+
+    const results = detect(text, {
+      functions: ["cn", "/[invalid(/", "/^get.*Classes$/"],
+    })
+
+    expect(results).toHaveLength(3)
+    expect(warningSpy).toHaveBeenCalledTimes(1)
+    expect(warningSpy.mock.calls[0]?.[0]).toContain("/[invalid(/")
+  })
+
+  it("does not repeat the warning for the same invalid regex pattern", () => {
+    const warningSpy = vi.spyOn(window, "showWarningMessage")
+
+    detect('<div class="flex items-center p-4 rounded">', {
+      functions: ["/[still-invalid(/"],
+    })
+    detect('<div class="flex items-center p-4 rounded">', {
+      functions: ["/[still-invalid(/"],
+    })
+
+    expect(warningSpy).toHaveBeenCalledTimes(1)
   })
 
   it("returns results gracefully when regex pattern is invalid", () => {
