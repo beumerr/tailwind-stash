@@ -34,6 +34,20 @@ export class CSSPreviewPanel {
 
     this.panel.onDidDispose(() => this.dispose(), null, this.disposables)
 
+    this.panel.onDidChangeViewState(
+      (e) => {
+        if (e.webviewPanel.visible) {
+          this.lastContentKey = ""
+          const ed = vscode.window.activeTextEditor
+          if (ed && ed.document.uri.scheme !== "output") {
+            this.updateForEditor(ed)
+          }
+        }
+      },
+      null,
+      this.disposables,
+    )
+
     this.panel.webview.onDidReceiveMessage((msg) => this.handleMessage(msg), null, this.disposables)
 
     this.disposables.push(
@@ -50,6 +64,8 @@ export class CSSPreviewPanel {
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor && editor.document.uri.scheme !== "output") {
           this.updateForEditor(editor)
+        } else if (!editor) {
+          this.lastContentKey = ""
         }
       }),
       onDidUpdateRanges((uri) => {
@@ -121,9 +137,9 @@ export class CSSPreviewPanel {
   private async handleMessage(msg: { classes?: string; index?: number; type: string }) {
     if (msg.type === "ready") {
       this.sendConfig()
+      this.lastContentKey = ""
       const editor = vscode.window.activeTextEditor
       if (editor && editor.document.uri.scheme !== "output") {
-        this.lastContentKey = ""
         this.updateForEditor(editor)
       }
       return
