@@ -85,6 +85,7 @@ Rules:
 
 - **Never push directly to master.** Branch protection requires a pull request with all status checks passing.
 - Always create a branch, push it, open a PR via `gh pr create`, wait for CI, then merge via `gh pr merge`.
+- When a PR fixes a GitHub issue, include `Closes #N` in the PR body **before merging** (not in a comment). GitHub only auto-closes issues when the keyword is present at merge time.
 
 ### Message protocol
 
