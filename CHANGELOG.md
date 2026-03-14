@@ -4,6 +4,20 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.4] - 2026-03-14
+
+### Fixed
+
+- Fix class editor panel losing connection when switching editors or opening new tabs (#20)
+- Fix decorations only appearing on the active editor — now all visible editors in split view are decorated
+- Eliminate race condition where the panel could read stale ranges before FoldingManager had processed the new editor
+
+### Added
+
+- FoldingManager emits `onDidUpdateRanges` event so consumers react to genuine range changes, not stale cache
+- Manual testing sandbox (`sandbox/`) with 7 fixture files covering edge cases — F5 opens it automatically
+- 2 new unit tests (334 total)
+
 ## [0.2.3] - 2026-03-13
 
 ### Changed
