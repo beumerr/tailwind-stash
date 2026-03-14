@@ -20,15 +20,21 @@ export function activate(context: vscode.ExtensionContext) {
       foldingManager.toggle()
     }),
     vscode.commands.registerCommand("tailwindStash.showCssPreview", () => {
-      CSSPreviewPanel.createOrShow(context.extensionPath, (uri) =>
-        foldingManager.getClassRanges(uri),
+      CSSPreviewPanel.createOrShow(
+        context.extensionPath,
+        (uri) => foldingManager.getClassRanges(uri),
+        foldingManager.onDidUpdateRanges,
       )
     }),
     vscode.commands.registerCommand("tailwindStash.hideCssPreview", () => {
       CSSPreviewPanel.hide()
     }),
     vscode.commands.registerCommand("tailwindStash.toggleCssPreview", () => {
-      CSSPreviewPanel.toggle(context.extensionPath, (uri) => foldingManager.getClassRanges(uri))
+      CSSPreviewPanel.toggle(
+        context.extensionPath,
+        (uri) => foldingManager.getClassRanges(uri),
+        foldingManager.onDidUpdateRanges,
+      )
     }),
     vscode.commands.registerCommand("tailwindStash.expandPlaceholder", () => {
       expandPlaceholderAtCursor()
