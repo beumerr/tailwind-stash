@@ -4,6 +4,18 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.5] - 2026-03-14
+
+### Fixed
+
+- Fix panel not recovering classes after switching to non-editor views (Extensions, Terminal) and back
+- Fix stale content key preventing full panel update when webview is recreated without an active editor
+- Add `onDidChangeViewState` handler to force panel resend when it becomes visible after being hidden
+
+### Added
+
+- 4 new regression tests for panel recovery scenarios (338 total)
+
 ## [0.2.4] - 2026-03-14
 
 ### Fixed

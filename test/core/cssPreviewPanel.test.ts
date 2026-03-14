@@ -739,6 +739,74 @@ describe("regression: panel shows classes on open (ready message)", () => {
   })
 })
 
+describe("regression: panel recovery after editor focus loss", () => {
+  it("resets content key when active editor becomes undefined", () => {
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
+
+    // Simulate switching to a non-editor view (e.g. Extensions sidebar)
+    _fireEvent("onDidChangeActiveTextEditor", undefined)
+
+    // Now switch back to the same editor
+    const messagesBefore = panel._getMessages().length
+    window.activeTextEditor = editor
+    _fireEvent("onDidChangeActiveTextEditor", editor)
+
+    // Should send a full update (not just setActive) because content key was reset
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const updateMsg = newMessages.find((m) => m.type === "update")
+    expect(updateMsg).toBeDefined()
+  })
+
+  it("resends full update when panel becomes visible after being hidden", () => {
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
+    const messagesBefore = panel._getMessages().length
+
+    // Simulate panel becoming visible again (webview may have been recreated)
+    panel._simulateViewStateChange(true)
+
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const updateMsg = newMessages.find((m) => m.type === "update")
+    expect(updateMsg).toBeDefined()
+  })
+
+  it("does not send update when panel becomes hidden", () => {
+    const { panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
+    const messagesBefore = panel._getMessages().length
+
+    panel._simulateViewStateChange(false)
+
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const updateMsg = newMessages.find((m) => m.type === "update")
+    expect(updateMsg).toBeUndefined()
+  })
+
+  it("ready message resets content key even without active editor", () => {
+    const { editor, panel } = createPanelWithEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 0,
+    })
+
+    // Simulate no active editor when ready fires
+    window.activeTextEditor = undefined
+    panel._simulateMessage({ type: "ready" })
+
+    // Now restore the editor and trigger an editor change
+    const messagesBefore = panel._getMessages().length
+    window.activeTextEditor = editor
+    _fireEvent("onDidChangeActiveTextEditor", editor)
+
+    // Should send a full update because ready reset the content key
+    const newMessages = panel._getMessages().slice(messagesBefore)
+    const updateMsg = newMessages.find((m) => m.type === "update")
+    expect(updateMsg).toBeDefined()
+  })
+})
+
 describe("regression: onDidUpdateRanges finds editor via visibleTextEditors", () => {
   it("uses visibleTextEditors to find editor when activeTextEditor is undefined", () => {
     const { editor, getClassRanges, panel, rangesEmitter } = createPanelWithEditor(
