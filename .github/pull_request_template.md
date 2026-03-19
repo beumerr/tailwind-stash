@@ -25,4 +25,6 @@
 
 ## Related issues
 
-<!-- Link any related issues: Fixes #123 -->
+<!-- If this PR fixes an issue, add "Closes #N" here (not in a comment).
+     GitHub auto-closes the issue when the PR merges. -->
+Closes #
