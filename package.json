@@ -279,7 +279,7 @@
     "release": "tsx scripts/publish.mts"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.2.1",
+    "@tailwindcss/cli": "^4.2.2",
     "@testing-library/preact": "^3.2.4",
     "@types/mocha": "^10.0.0",
     "@types/node": "^20.19.37",
