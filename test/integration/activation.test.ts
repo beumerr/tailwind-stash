@@ -52,6 +52,7 @@ describe("collapseAll produces decorations on an active editor", () => {
   it("applies fold decorations after collapseAll command", () => {
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
     activate(makeContext())
 
     // The FoldingManager runs on construction, but let's explicitly collapse
@@ -68,6 +69,7 @@ describe("collapseAll produces decorations on an active editor", () => {
   it("clears all decorations after expandAll command", () => {
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
     activate(makeContext())
 
     editor._decorationCalls.splice(0)
@@ -81,6 +83,7 @@ describe("collapseAll produces decorations on an active editor", () => {
   it("toggleCollapse flips between folded and expanded", () => {
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
     activate(makeContext())
 
     // Should start enabled (foldByDefault = true) — toggle to disabled
@@ -102,6 +105,7 @@ describe("decoration content matches classDetector output", () => {
   it("placeholder count matches number of classes in the attribute", () => {
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
     activate(makeContext())
 
     const placeholderCalls = editor._decorationCalls.filter(
@@ -123,6 +127,7 @@ describe("decoration content matches classDetector output", () => {
   it("hover message contains class names from the document", () => {
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
     activate(makeContext())
 
     const placeholderCalls = editor._decorationCalls.filter(
@@ -221,7 +226,7 @@ describe("editor switch updates both folding and panel", () => {
 // ─── Text changes trigger both systems ──────────────────────────────
 
 describe("text change triggers both folding and panel refresh", () => {
-  it("document change debounces and updates both decorations and panel", () => {
+  it("document change debounces and updates decorations", () => {
     vi.useFakeTimers()
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
@@ -229,10 +234,8 @@ describe("text change triggers both folding and panel refresh", () => {
     activate(makeContext())
 
     _getCommandHandler("tailwindStash.showCssPreview")!()
-    const panel = _getLastPanel()
 
     editor._decorationCalls.splice(0)
-    const messagesAfterPanel = panel._getMessages().length
 
     // Simulate a text document change
     _fireEvent("onDidChangeTextDocument", { document: editor.document })
@@ -240,16 +243,37 @@ describe("text change triggers both folding and panel refresh", () => {
     // Before debounce, nothing should have updated
     expect(editor._decorationCalls).toHaveLength(0)
 
-    // Advance past both debounce timers (FoldingManager: 150ms, CSSPreviewPanel: 150ms)
+    // Advance past debounce timer (FoldingManager: 150ms)
     vi.advanceTimersByTime(200)
 
     // FoldingManager should have re-applied decorations
     expect(editor._decorationCalls.length).toBeGreaterThan(0)
+  })
 
-    // CSSPreviewPanel should have sent a new update
+  it("panel receives update when switching to an editor with different content", () => {
+    const editor1 = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
+    window.activeTextEditor = editor1
+    window.visibleTextEditors = [editor1]
+    activate(makeContext())
+
+    _getCommandHandler("tailwindStash.showCssPreview")!()
+    const panel = _getLastPanel()
+    const messagesAfterPanel = panel._getMessages().length
+
+    // Switch to a different editor — FoldingManager fires onDidUpdateRanges,
+    // panel's onDidChangeActiveTextEditor calls updateForEditor
+    const editor2 = createMockEditor('<p class="mt-4 px-2 text-lg font-medium">Text</p>', {
+      cursorLine: 1,
+      uri: "file:///second.tsx",
+    })
+    window.activeTextEditor = editor2
+    window.visibleTextEditors = [editor1, editor2]
+    _fireEvent("onDidChangeActiveTextEditor", editor2)
+
     const newMessages = panel._getMessages().slice(messagesAfterPanel)
     const updateMsg = newMessages.find((m: { type: string }) => m.type === "update")
     expect(updateMsg).toBeDefined()
+    expect(updateMsg.entries[0].element).toBe("p")
   })
 })
 
@@ -260,6 +284,7 @@ describe("cursor movement integration", () => {
     vi.useFakeTimers()
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
     activate(makeContext())
 
     // Move cursor to line 1 (the button with classes)
@@ -318,6 +343,7 @@ describe("panel lifecycle through commands", () => {
   it("hideCssPreview disposes the panel created by showCssPreview", () => {
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
     activate(makeContext())
 
     _getCommandHandler("tailwindStash.showCssPreview")!()
@@ -330,6 +356,7 @@ describe("panel lifecycle through commands", () => {
   it("toggleCssPreview creates then destroys the panel", () => {
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
     activate(makeContext())
 
     _getCommandHandler("tailwindStash.toggleCssPreview")!()
@@ -342,6 +369,7 @@ describe("panel lifecycle through commands", () => {
   it("showCssPreview reveals existing panel instead of creating a new one", () => {
     const editor = createMockEditor(HTML_WITH_CLASSES, { cursorLine: 0 })
     window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
     activate(makeContext())
 
     _getCommandHandler("tailwindStash.showCssPreview")!()

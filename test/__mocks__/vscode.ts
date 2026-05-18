@@ -216,6 +216,34 @@ export function createMockDocument(text: string): MockDocument {
   }
 }
 
+// ─── EventEmitter mock ──────────────────────────────────────────────
+
+export class EventEmitter<T> {
+  private listeners: ((e: T) => void)[] = []
+
+  event = (listener: (e: T) => void) => {
+    this.listeners.push(listener)
+    return {
+      dispose: () => {
+        const idx = this.listeners.indexOf(listener)
+        if (idx >= 0) {
+          this.listeners.splice(idx, 1)
+        }
+      },
+    }
+  }
+
+  fire(data: T) {
+    for (const listener of this.listeners) {
+      listener(data)
+    }
+  }
+
+  dispose() {
+    this.listeners = []
+  }
+}
+
 // ─── Mock registries for testing ────────────────────────────────────
 
 const commandHandlers = new Map<string, (...args: unknown[]) => unknown>()
@@ -224,6 +252,7 @@ const eventListeners = {
   onDidChangeConfiguration: [] as ((...args: unknown[]) => void)[],
   onDidChangeTextDocument: [] as ((...args: unknown[]) => void)[],
   onDidChangeTextEditorSelection: [] as ((...args: unknown[]) => void)[],
+  onDidChangeVisibleTextEditors: [] as ((...args: unknown[]) => void)[],
 }
 
 export function _reset() {
@@ -323,23 +352,31 @@ export interface MockMessage {
 export function createMockWebviewPanel() {
   let disposeCallback: (() => void) | undefined
   let messageCallback: ((msg: unknown) => void) | undefined
+  let viewStateCallback: ((e: { webviewPanel: { visible: boolean } }) => void) | undefined
   let disposed = false
   const messages: MockMessage[] = []
   const panel = {
     _getMessages: () => messages,
     _simulateDispose: () => disposeCallback?.(),
     _simulateMessage: (msg: unknown) => messageCallback?.(msg),
+    _simulateViewStateChange: (visible: boolean) =>
+      viewStateCallback?.({ webviewPanel: { visible } }),
     dispose() {
       if (!disposed) {
         disposed = true
         disposeCallback?.()
       }
     },
+    onDidChangeViewState(cb: (e: { webviewPanel: { visible: boolean } }) => void) {
+      viewStateCallback = cb
+      return { dispose() {} }
+    },
     onDidDispose(cb: () => void) {
       disposeCallback = cb
       return { dispose() {} }
     },
     reveal() {},
+    visible: true,
     webview: {
       html: "",
       onDidReceiveMessage(cb: (msg: unknown) => void) {
@@ -370,6 +407,7 @@ export const window = {
   },
   onDidChangeActiveTextEditor: makeEventEmitter("onDidChangeActiveTextEditor"),
   onDidChangeTextEditorSelection: makeEventEmitter("onDidChangeTextEditorSelection"),
+  onDidChangeVisibleTextEditors: makeEventEmitter("onDidChangeVisibleTextEditors"),
   showInformationMessage(_msg: string) {},
   showWarningMessage(_msg: string) {},
   showTextDocument() {},

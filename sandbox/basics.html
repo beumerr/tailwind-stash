@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Basics</title>
+  </head>
+  <body>
+    <!-- Single class attr, well above minClassCount -->
+    <div class="flex items-center gap-2 p-4 rounded hover:bg-blue-500">
+      Click me
+    </div>
+
+    <!-- Two attrs on separate lines -->
+    <section class="grid grid-cols-3 gap-4 p-6 bg-white">
+      <span class="text-sm font-bold text-red-500 mt-2">Label</span>
+    </section>
+
+    <!-- Exactly at default minClassCount (4) -->
+    <p class="mt-4 px-2 text-lg font-medium">Threshold</p>
+
+    <!-- Below minClassCount — should NOT fold -->
+    <p class="mt-4 px-2 text-lg">Below threshold</p>
+
+    <!-- Empty class — should NOT fold -->
+    <div class="">Empty</div>
+  </body>
+</html>

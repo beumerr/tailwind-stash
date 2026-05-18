@@ -12,7 +12,7 @@ export default defineConfig({
     es2024: true,
     node: true,
   },
-  ignorePatterns: ["scripts/", "meta.json"],
+  ignorePatterns: ["sandbox/", "scripts/", "meta.json"],
   jsPlugins: [
     "eslint-plugin-better-tailwindcss",
     "eslint-plugin-no-only-tests",
@@ -55,10 +55,12 @@ export default defineConfig({
       },
     },
     {
-      // Tests use JSX without explicit React/Preact import
+      // Tests use JSX without explicit React/Preact import.
+      // EventEmitter is from the VS Code API mock, not Node.js.
       files: ["test/**"],
       rules: {
         "react/react-in-jsx-scope": "off",
+        "unicorn/prefer-event-target": "off",
       },
     },
     {

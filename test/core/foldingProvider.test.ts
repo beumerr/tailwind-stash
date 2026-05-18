@@ -14,6 +14,9 @@ import { FoldingManager } from "../../src/core/foldingProvider"
 function createManager(editorText?: string, opts?: { cursorLine?: number }) {
   const editor = editorText ? createMockEditor(editorText, opts) : undefined
   window.activeTextEditor = editor
+  if (editor) {
+    window.visibleTextEditors = [editor]
+  }
   const manager = new FoldingManager()
   return { editor, manager }
 }
@@ -274,6 +277,7 @@ describe("event handlers", () => {
       cursorLine: 1,
     })
     window.activeTextEditor = newEditor
+    window.visibleTextEditors = [newEditor]
 
     _fireEvent("onDidChangeActiveTextEditor", newEditor)
 
@@ -354,6 +358,113 @@ describe("event handlers", () => {
     })
 
     expect(editor!._decorationCalls).toHaveLength(0)
+  })
+})
+
+// ─── updateAllVisibleEditors ─────────────────────────────────────────
+
+describe("updateAllVisibleEditors", () => {
+  it("decorates all visible editors, not just the active one", () => {
+    const editor1 = createMockEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 1,
+    })
+    const editor2 = createMockEditor('<span class="text-sm font-bold mt-2 mx-auto">', {
+      cursorLine: 1,
+      uri: "file:///second.tsx",
+    })
+    window.activeTextEditor = editor1
+    window.visibleTextEditors = [editor1, editor2]
+    const manager = new FoldingManager()
+
+    // Both editors should have received decorations on construction
+    const has1 = editor1._decorationCalls.some((c) => c.decorations.length > 0)
+    const has2 = editor2._decorationCalls.some((c) => c.decorations.length > 0)
+    expect(has1).toBe(true)
+    expect(has2).toBe(true)
+
+    manager.dispose()
+  })
+
+  it("decorates new editors when visible text editors change", () => {
+    const editor1 = createMockEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 1,
+    })
+    window.activeTextEditor = editor1
+    window.visibleTextEditors = [editor1]
+    const manager = new FoldingManager()
+
+    const editor2 = createMockEditor('<span class="text-sm font-bold mt-2 mx-auto">', {
+      cursorLine: 1,
+      uri: "file:///second.tsx",
+    })
+    window.visibleTextEditors = [editor1, editor2]
+    _fireEvent("onDidChangeVisibleTextEditors", [editor1, editor2])
+
+    const has2 = editor2._decorationCalls.some((c) => c.decorations.length > 0)
+    expect(has2).toBe(true)
+
+    manager.dispose()
+  })
+})
+
+// ─── onDidUpdateRanges event ─────────────────────────────────────────
+
+describe("onDidUpdateRanges", () => {
+  it("fires when ranges are first detected for a new URI", () => {
+    // Start with no editor so initial construction doesn't detect anything
+    const manager = new FoldingManager()
+    const fired: string[] = []
+    manager.onDidUpdateRanges((uri) => fired.push(uri))
+
+    // Add an editor — first time this URI is processed
+    const editor = createMockEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 1,
+    })
+    window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
+    _fireEvent("onDidChangeActiveTextEditor", editor)
+
+    expect(fired).toContain("file:///test.tsx")
+
+    manager.dispose()
+  })
+
+  it("does not fire when ranges haven't changed", () => {
+    const editor = createMockEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 1,
+    })
+    window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
+
+    const manager = new FoldingManager()
+    const fired: string[] = []
+    manager.onDidUpdateRanges((uri) => fired.push(uri))
+
+    // Re-trigger decoration update — same document, same ranges
+    _fireEvent("onDidChangeActiveTextEditor", editor)
+
+    expect(fired).toHaveLength(0)
+
+    manager.dispose()
+  })
+
+  it("does not fire when disabled (no range detection)", () => {
+    const fired: string[] = []
+    const editor = createMockEditor('<div class="flex items-center p-4 rounded">', {
+      cursorLine: 1,
+    })
+    window.activeTextEditor = editor
+    window.visibleTextEditors = [editor]
+
+    const manager = new FoldingManager()
+    manager.onDidUpdateRanges((uri) => fired.push(uri))
+    fired.length = 0
+
+    manager.setEnabled(false)
+
+    expect(fired).toHaveLength(0)
+
+    manager.dispose()
   })
 })
 

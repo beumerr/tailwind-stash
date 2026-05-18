@@ -10,5 +10,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", ".vscode-test", "test", "scripts", "vitest.config.ts", "esbuild.webview.mts", "src/webview", "oxlint.config.mjs", "out"]
+  "exclude": ["node_modules", ".vscode-test", "test", "scripts", "sandbox", "vitest.config.ts", "esbuild.webview.mts", "src/webview", "oxlint.config.mjs", "out"]
 }

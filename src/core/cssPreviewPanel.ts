@@ -4,7 +4,6 @@ import { join } from "node:path"
 // eslint-disable-next-line import/no-namespace -- vscode SDK requires namespace import
 import * as vscode from "vscode"
 
-import { debounce } from "../utils/utils"
 import { ClassRange } from "./classDetector"
 
 export class CSSPreviewPanel {
@@ -19,25 +18,35 @@ export class CSSPreviewPanel {
   private currentEditorUri: string = ""
   private lastContentKey: string = ""
   private lastActiveIndex: number = -1
-  private textChangeDebounce: { cancel: () => void; fn: (editor: vscode.TextEditor) => void }
 
   private constructor(
     panel: vscode.WebviewPanel,
     extensionPath: string,
     getClassRanges: (uri: string) => ClassRange[],
+    onDidUpdateRanges: vscode.Event<string>,
   ) {
     this.panel = panel
     this.extensionPath = extensionPath
     this.getClassRanges = getClassRanges
-    this.textChangeDebounce = debounce(
-      (editor: vscode.TextEditor) => this.updateForEditor(editor),
-      150,
-    )
 
     this.panel.webview.html = this.getHtml()
     this.sendConfig()
 
     this.panel.onDidDispose(() => this.dispose(), null, this.disposables)
+
+    this.panel.onDidChangeViewState(
+      (e) => {
+        if (e.webviewPanel.visible) {
+          this.lastContentKey = ""
+          const ed = vscode.window.activeTextEditor
+          if (ed && ed.document.uri.scheme !== "output") {
+            this.updateForEditor(ed)
+          }
+        }
+      },
+      null,
+      this.disposables,
+    )
 
     this.panel.webview.onDidReceiveMessage((msg) => this.handleMessage(msg), null, this.disposables)
 
@@ -55,13 +64,18 @@ export class CSSPreviewPanel {
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor && editor.document.uri.scheme !== "output") {
           this.updateForEditor(editor)
+        } else if (!editor) {
+          this.lastContentKey = ""
         }
       }),
-      vscode.workspace.onDidChangeTextDocument((e) => {
-        const editor = vscode.window.visibleTextEditors.find((ed) => ed.document === e.document)
-        if (editor) {
-          this.lastContentKey = ""
-          this.textChangeDebounce.fn(editor)
+      onDidUpdateRanges((uri) => {
+        if (uri === this.currentEditorUri) {
+          const editor = vscode.window.visibleTextEditors.find(
+            (ed) => ed.document.uri.toString() === uri,
+          )
+          if (editor) {
+            this.updateForEditor(editor)
+          }
         }
       }),
     )
@@ -78,15 +92,23 @@ export class CSSPreviewPanel {
     }
   }
 
-  static toggle(extensionPath: string, getClassRanges: (uri: string) => ClassRange[]) {
+  static toggle(
+    extensionPath: string,
+    getClassRanges: (uri: string) => ClassRange[],
+    onDidUpdateRanges: vscode.Event<string>,
+  ) {
     if (CSSPreviewPanel.currentPanel) {
       CSSPreviewPanel.currentPanel.dispose()
     } else {
-      CSSPreviewPanel.createOrShow(extensionPath, getClassRanges)
+      CSSPreviewPanel.createOrShow(extensionPath, getClassRanges, onDidUpdateRanges)
     }
   }
 
-  static createOrShow(extensionPath: string, getClassRanges: (uri: string) => ClassRange[]) {
+  static createOrShow(
+    extensionPath: string,
+    getClassRanges: (uri: string) => ClassRange[],
+    onDidUpdateRanges: vscode.Event<string>,
+  ) {
     const column = vscode.ViewColumn.Beside
 
     if (CSSPreviewPanel.currentPanel) {
@@ -104,15 +126,20 @@ export class CSSPreviewPanel {
       },
     )
 
-    CSSPreviewPanel.currentPanel = new CSSPreviewPanel(panel, extensionPath, getClassRanges)
+    CSSPreviewPanel.currentPanel = new CSSPreviewPanel(
+      panel,
+      extensionPath,
+      getClassRanges,
+      onDidUpdateRanges,
+    )
   }
 
   private async handleMessage(msg: { classes?: string; index?: number; type: string }) {
     if (msg.type === "ready") {
       this.sendConfig()
+      this.lastContentKey = ""
       const editor = vscode.window.activeTextEditor
       if (editor && editor.document.uri.scheme !== "output") {
-        this.lastContentKey = ""
         this.updateForEditor(editor)
       }
       return
@@ -224,7 +251,6 @@ export class CSSPreviewPanel {
 
   dispose() {
     CSSPreviewPanel.currentPanel = undefined
-    this.textChangeDebounce.cancel()
     this.panel.dispose()
     this.disposables.forEach((d) => d.dispose())
   }
