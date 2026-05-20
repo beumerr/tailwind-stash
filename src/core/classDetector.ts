@@ -69,6 +69,8 @@ export function detectClassRanges(
       // Use \b boundaries instead for correct matching.
       const cleaned = regexMatch[1].replace(/^\^/, "").replace(/\$$/, "")
       try {
+        // Validate the pattern compiles; the constructor throws SyntaxError on invalid syntax.
+        // oxlint-disable-next-line no-new -- constructed only to validate; result intentionally unused
         new RegExp(cleaned)
       } catch (error) {
         warnInvalidSupportedFunctionPattern(fn, error)
