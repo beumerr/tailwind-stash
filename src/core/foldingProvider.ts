@@ -6,6 +6,61 @@ import { DEFAULT_SUPPORTED_FUNCTIONS } from "./classContext"
 import { ClassRange, detectClassRanges } from "./classDetector"
 import { formatPlaceholder, matchPlaceholders } from "./placeholderMatcher"
 
+/**
+ * When a collapsed class string expands again.
+ *
+ * - `line`  — the caret is anywhere on a line the class string spans.
+ * - `range` — the selection actually reaches the class string itself.
+ */
+export type UnfoldBehavior = "line" | "range"
+
+/** Minimal positional shape, so mock selections from tests work too */
+interface PositionLike {
+  character: number
+  line: number
+}
+
+interface SelectionLike {
+  active: PositionLike
+  anchor?: PositionLike
+}
+
+function isBefore(a: PositionLike, b: PositionLike): boolean {
+  return a.line < b.line || (a.line === b.line && a.character < b.character)
+}
+
+/**
+ * Whether a collapsed class range should expand for the current selection.
+ *
+ * In `range` mode the zone is the class string plus the quote on either side.
+ * `range.end` already sits on the closing quote, so the opening quote is added
+ * back to keep the two edges symmetric. That matters for clicking: a collapsed
+ * string renders at near-zero width, so a click on the placeholder can land on
+ * either quote, and click-to-expand has to keep working.
+ *
+ * Compares line/character directly rather than using `Range.contains`, so a
+ * selection spanning the class string expands it as well.
+ */
+export function shouldExpandForSelection(
+  classRange: vscode.Range,
+  selection: SelectionLike,
+  behavior: UnfoldBehavior,
+): boolean {
+  const active = selection.active
+  if (behavior === "line") {
+    return active.line >= classRange.start.line && active.line <= classRange.end.line
+  }
+
+  const anchor = selection.anchor ?? active
+  const selStart = isBefore(anchor, active) ? anchor : active
+  const selEnd = isBefore(anchor, active) ? active : anchor
+  const zoneStart = {
+    character: Math.max(0, classRange.start.character - 1),
+    line: classRange.start.line,
+  }
+  return !isBefore(selEnd, zoneStart) && !isBefore(classRange.end, selStart)
+}
+
 /** Manages horizontal collapse decorations */
 export class FoldingManager {
   private readonly _onDidUpdateRanges = new vscode.EventEmitter<string>()
@@ -17,8 +72,9 @@ export class FoldingManager {
   private hideType: vscode.TextEditorDecorationType
   private selectionDebounce: { cancel: () => void; fn: (editor: vscode.TextEditor) => void }
   private textChangeDebounce: { cancel: () => void; fn: (editor: vscode.TextEditor) => void }
-  private lastCursorLine: number = -1
+  private lastCursorKey: string = ""
   private lastRangeKeys: Map<string, string> = new Map()
+  private unfoldBehavior: UnfoldBehavior
   private cachedConfig: {
     foldedTextColor: string
     minClassCount: number
@@ -31,6 +87,7 @@ export class FoldingManager {
   constructor() {
     const config = vscode.workspace.getConfiguration("tailwindStash")
     this.enabled = config.get<boolean>("foldByDefault", true)
+    this.unfoldBehavior = config.get<UnfoldBehavior>("unfoldBehavior", "range")
 
     // Create decoration types once — reuse them
     this.placeholderType = vscode.window.createTextEditorDecorationType({})
@@ -48,7 +105,7 @@ export class FoldingManager {
 
     this.disposables.push(
       vscode.window.onDidChangeActiveTextEditor(() => {
-        this.lastCursorLine = -1
+        this.lastCursorKey = ""
         this.updateAllVisibleEditors()
       }),
       vscode.window.onDidChangeVisibleTextEditors(() => {
@@ -64,19 +121,28 @@ export class FoldingManager {
         }
       }),
       vscode.window.onDidChangeTextEditorSelection((e) => {
-        const newLine = e.selections[0]?.active.line ?? -1
-        // Only re-render if cursor moved to a different line
-        if (newLine === this.lastCursorLine) {
+        const selection = e.selections[0]
+        const newLine = selection?.active.line ?? -1
+        // In range mode the column matters too: moving horizontally into or out
+        // of a class string changes what should be expanded without ever
+        // leaving the line.
+        const newCursorKey =
+          this.unfoldBehavior === "range"
+            ? `${newLine}:${selection?.active.character ?? -1}`
+            : `${newLine}`
+        // Only re-render if the cursor actually moved somewhere that matters
+        if (newCursorKey === this.lastCursorKey) {
           return
         }
-        this.lastCursorLine = newLine
-        // Skip debounce if the cursor landed on a collapsed class line —
+        this.lastCursorKey = newCursorKey
+        // Skip debounce if the cursor landed on a collapsed class range —
         // the user clicked a folded string and expects instant expansion.
         const uri = e.textEditor.document.uri.toString()
         const ranges = this.classRanges.get(uri)
         const hitsCollapsed =
           ranges &&
-          ranges.some((cr) => newLine >= cr.range.start.line && newLine <= cr.range.end.line)
+          selection &&
+          ranges.some((cr) => shouldExpandForSelection(cr.range, selection, this.unfoldBehavior))
         if (hitsCollapsed) {
           this.selectionDebounce.cancel()
           this.updateDecorations(e.textEditor)
@@ -88,6 +154,7 @@ export class FoldingManager {
         if (e.affectsConfiguration("tailwindStash")) {
           const updatedConfig = vscode.workspace.getConfiguration("tailwindStash")
           this.enabled = updatedConfig.get<boolean>("foldByDefault", true)
+          this.unfoldBehavior = updatedConfig.get<UnfoldBehavior>("unfoldBehavior", "range")
           this.cachedConfig = null
           this.updateAllVisibleEditors()
         }
@@ -159,10 +226,10 @@ export class FoldingManager {
     const rangesChanged = this.lastRangeKeys.get(uri) !== rangeKey
     this.lastRangeKeys.set(uri, rangeKey)
 
-    // Skip collapsing any range the cursor is currently on
-    const cursorLine = editor.selection.active.line
+    // Skip collapsing any range the selection currently reaches
+    const selection = editor.selection
     const visibleRanges = ranges.filter(
-      (cr) => cursorLine < cr.range.start.line || cursorLine > cr.range.end.line,
+      (cr) => !shouldExpandForSelection(cr.range, selection, this.unfoldBehavior),
     )
 
     const hasPlaceholders = Object.keys(placeholders).length > 0

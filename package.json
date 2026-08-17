@@ -114,6 +114,19 @@
             "minimum": 1,
             "description": "Minimum number of classes required before collapsing kicks in"
           },
+          "tailwindStash.unfoldBehavior": {
+            "type": "string",
+            "enum": [
+              "line",
+              "range"
+            ],
+            "enumDescriptions": [
+              "Expand when the cursor is anywhere on the line",
+              "Expand only when the cursor reaches the class string itself"
+            ],
+            "default": "range",
+            "description": "When a collapsed class string expands again. Use \"line\" to expand from anywhere on the line, as versions before 0.2.6 did."
+          },
           "tailwindStash.extraLanguages": {
             "type": "array",
             "default": [],
@@ -299,7 +312,7 @@
     "preact": "^10.29.0",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.3.0",
+    "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }
 }

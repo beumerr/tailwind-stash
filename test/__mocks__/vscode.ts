@@ -275,11 +275,15 @@ export function _fireEvent(event: keyof typeof eventListeners, ...args: unknown[
   }
 }
 
-export function createMockEditor(text: string, opts?: { cursorLine?: number; uri?: string }) {
+export function createMockEditor(
+  text: string,
+  opts?: { cursorCharacter?: number; cursorLine?: number; uri?: string },
+) {
   const doc = createMockDocument(text)
   const uri = opts?.uri ?? "file:///test.tsx"
   doc.uri = { scheme: "file", toString: () => uri }
   const cursorLine = opts?.cursorLine ?? 0
+  const cursorCharacter = opts?.cursorCharacter ?? 0
   const decorationCalls: { decorations: unknown[]; type: unknown }[] = []
   const editor = {
     _decorationCalls: decorationCalls,
@@ -291,7 +295,7 @@ export function createMockEditor(text: string, opts?: { cursorLine?: number; uri
       return true
     },
     revealRange() {},
-    selection: new Selection(new Position(cursorLine, 0)),
+    selection: new Selection(new Position(cursorLine, cursorCharacter)),
     setDecorations(type: unknown, decorations: unknown[]) {
       decorationCalls.push({ decorations, type })
     },

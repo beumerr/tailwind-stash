@@ -93,6 +93,7 @@ describe("Extension Smoke Tests", () => {
     assert.strictEqual(config.get("foldByDefault"), true)
     assert.strictEqual(config.get("placeholderStyle"), "count")
     assert.strictEqual(config.get("minClassCount"), 4)
+    assert.strictEqual(config.get("unfoldBehavior"), "range")
     assert.strictEqual(config.get("scrollEditorOnPanelSelect"), true)
     assert.strictEqual(config.get("scrollPanelOnEditorSelect"), true)
     assert.deepStrictEqual(config.get("placeholders"), {})
