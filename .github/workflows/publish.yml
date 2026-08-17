@@ -36,6 +36,7 @@ jobs:
 
       - run: npm run format:check
       - run: npm run lint
+      - run: npm run typecheck
       - run: npm run compile
       - run: npm run test:unit
 
