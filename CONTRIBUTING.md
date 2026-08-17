@@ -37,7 +37,7 @@ Runs as a standard VS Code extension in Node.js.
 
 - **`extension.ts`** — Entry point. Registers commands and initializes `FoldingManager`.
 - **`core/classDetector.ts`** — Regex-based detection of Tailwind class strings in documents. Handles HTML attributes (`class="..."`), JSX (`className="..."`), template literals with interpolations, and utility function calls (`cn()`, `clsx()`, etc.). Returns `ClassRange[]` with the class names, element tag, and document range.
-- **`core/foldingProvider.ts`** — `FoldingManager` applies VS Code text decorations to collapse class strings visually. Uses `letterSpacing: -9999px` + `opacity: 0` to hide the original text and renders a placeholder (`before` decoration). Automatically expands the line the cursor is on.
+- **`core/foldingProvider.ts`** — `FoldingManager` applies VS Code text decorations to collapse class strings visually. Uses `letterSpacing: -9999px` + `opacity: 0` to hide the original text and renders a placeholder (`before` decoration). Automatically expands the class string the selection reaches, or the whole line when `unfoldBehavior` is set to `line`.
 - **`core/cssPreviewPanel.ts`** — `CSSPreviewPanel` manages the webview panel lifecycle. Sends class data to the webview via `postMessage` and handles incoming edits, navigation, and selection sync.
 - **`utils/types.ts`** — Shared types (e.g. `ClassEntry`) used by both extension host and webview.
 - **`utils/utils.ts`** — Shared utilities: `cn()` class joiner, `debounce()`, `generateNonce()`.

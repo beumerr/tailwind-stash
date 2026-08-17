@@ -23,7 +23,7 @@ Collapses class strings into a compact placeholder. Hover over the collapsed tex
 <div class="6">
 ```
 
-The line the cursor is on is always expanded, so you can read and edit classes normally.
+Move the cursor into a collapsed class string and it expands, so you can read and edit classes normally. Editing elsewhere on the same line leaves it collapsed — set [`unfoldBehavior`](#folding) to `line` to expand from anywhere on the line instead.
 
 ### Placeholder Labels
 
@@ -112,7 +112,7 @@ This list is fully configurable via the `tailwindStash.supportedFunctions` setti
 | `tailwindStash.foldByDefault` | `true` | Collapse classes automatically when a file is opened |
 | `tailwindStash.placeholderStyle` | `"count"` | Placeholder style: `count` (`3`), `count-long` (`3 classes`), or `empty` (`…`) |
 | `tailwindStash.minClassCount` | `4` | Minimum number of classes before collapsing kicks in |
-| `tailwindStash.unfoldBehavior` | `"range"` | When a collapsed class expands: `range` (cursor reaches the class string itself) or `line` (cursor anywhere on the line, as before 0.2.6) |
+| `tailwindStash.unfoldBehavior` | `"range"` | When a collapsed class expands: `range` (cursor reaches the class string itself) or `line` (cursor anywhere on the line — the behavior before this setting existed) |
 | `tailwindStash.extraLanguages` | `[]` | (Experimental) Additional language IDs to enable collapsing for. Requires reload. |
 | `tailwindStash.placeholders` | `{}` | Map of short labels to Tailwind class strings for smart fold placeholders and autocomplete |
 | `tailwindStash.placeholderFormat` | `"{keys} +{rest}"` | Format template for matched placeholder labels. `{keys}` = matched names, `{rest}` = extra class count |
