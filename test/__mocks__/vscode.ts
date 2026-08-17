@@ -410,6 +410,7 @@ export const window = {
   onDidChangeVisibleTextEditors: makeEventEmitter("onDidChangeVisibleTextEditors"),
   showInformationMessage(_msg: string) {},
   showTextDocument() {},
+  showWarningMessage(_msg: string) {},
   visibleTextEditors: [] as unknown[],
 }
 
