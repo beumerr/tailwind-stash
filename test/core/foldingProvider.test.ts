@@ -7,11 +7,17 @@ import {
   type HoverDecoration,
   mockConfig,
   type PlaceholderDecoration,
+  Position,
+  Range,
+  Selection,
   window,
 } from "../__mocks__/vscode"
-import { FoldingManager } from "../../src/core/foldingProvider"
+import { FoldingManager, shouldExpandForSelection } from "../../src/core/foldingProvider"
 
-function createManager(editorText?: string, opts?: { cursorLine?: number }) {
+function createManager(
+  editorText?: string,
+  opts?: { cursorCharacter?: number; cursorLine?: number },
+) {
   const editor = editorText ? createMockEditor(editorText, opts) : undefined
   window.activeTextEditor = editor
   if (editor) {
@@ -573,5 +579,181 @@ describe("regression: visibleTextEditors fallback for text document changes", ()
 
     // Should not throw — gracefully handles missing activeTextEditor
     vi.useRealTimers()
+  })
+})
+
+// ─── unfoldBehavior ─────────────────────────────────────────────────
+
+/**
+ * The class value in this document occupies characters 12–41 on line 0:
+ *
+ *   <div class="flex items-center p-4 rounded">
+ *   0          ^12                          ^41
+ */
+const ATTR_LINE = '<div class="flex items-center p-4 rounded">'
+const VALUE_START = 12
+const VALUE_END = 41
+
+/** How many class ranges were left collapsed by the most recent render */
+function collapsedCount(editor: { _decorationCalls: { decorations: unknown[] }[] }): number {
+  const calls = editor._decorationCalls
+  return calls.at(-1)?.decorations.length ?? 0
+}
+
+describe("shouldExpandForSelection", () => {
+  const classRange = new Range(new Position(0, VALUE_START), new Position(0, VALUE_END))
+  const caretAt = (character: number, line = 0) => new Selection(new Position(line, character))
+
+  describe("line behavior", () => {
+    it("expands from anywhere on the line, including before the class string", () => {
+      expect(shouldExpandForSelection(classRange, caretAt(0), "line")).toBe(true)
+      expect(shouldExpandForSelection(classRange, caretAt(VALUE_END + 1), "line")).toBe(true)
+    })
+
+    it("does not expand from a different line", () => {
+      expect(shouldExpandForSelection(classRange, caretAt(20, 1), "line")).toBe(false)
+    })
+  })
+
+  describe("range behavior", () => {
+    it("does not expand when the caret is elsewhere on the same line", () => {
+      expect(shouldExpandForSelection(classRange, caretAt(2), "range")).toBe(false)
+      expect(shouldExpandForSelection(classRange, caretAt(VALUE_END + 1), "range")).toBe(false)
+    })
+
+    it("expands when the caret is inside the class string", () => {
+      expect(shouldExpandForSelection(classRange, caretAt(20), "range")).toBe(true)
+    })
+
+    it("expands when the caret touches either edge", () => {
+      expect(shouldExpandForSelection(classRange, caretAt(VALUE_START), "range")).toBe(true)
+      expect(shouldExpandForSelection(classRange, caretAt(VALUE_END), "range")).toBe(true)
+    })
+
+    it("expands on the surrounding quotes, so clicking the placeholder works", () => {
+      // VALUE_END is already the closing quote; VALUE_START - 1 is the opening one
+      expect(shouldExpandForSelection(classRange, caretAt(VALUE_START - 1), "range")).toBe(true)
+    })
+
+    it("does not expand one character beyond the quotes", () => {
+      expect(shouldExpandForSelection(classRange, caretAt(VALUE_START - 2), "range")).toBe(false)
+      expect(shouldExpandForSelection(classRange, caretAt(VALUE_END + 1), "range")).toBe(false)
+    })
+
+    it("clamps the lead-in at column 0", () => {
+      const atLineStart = new Range(new Position(0, 0), new Position(0, 10))
+      expect(shouldExpandForSelection(atLineStart, caretAt(0), "range")).toBe(true)
+      expect(shouldExpandForSelection(atLineStart, caretAt(11), "range")).toBe(false)
+    })
+
+    it("expands when a selection spans the class string", () => {
+      const spanning = new Selection(new Position(0, 0), new Position(0, VALUE_END + 1))
+      expect(shouldExpandForSelection(classRange, spanning, "range")).toBe(true)
+    })
+
+    it("expands for a backwards selection that reaches the class string", () => {
+      const backwards = new Selection(new Position(0, VALUE_END + 1), new Position(0, 20))
+      expect(shouldExpandForSelection(classRange, backwards, "range")).toBe(true)
+    })
+
+    it("does not expand for a selection that stops short of the class string", () => {
+      const short = new Selection(new Position(0, 0), new Position(0, VALUE_START - 2))
+      expect(shouldExpandForSelection(classRange, short, "range")).toBe(false)
+    })
+  })
+})
+
+describe("unfoldBehavior config", () => {
+  it("defaults to line behavior — caret before the class string expands it", () => {
+    const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
+
+    expect(collapsedCount(editor!)).toBe(0)
+  })
+
+  it("keeps the class collapsed in range mode when the caret is elsewhere on the line", () => {
+    const cleanup = mockConfig({ unfoldBehavior: "range" })
+    const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
+
+    expect(collapsedCount(editor!)).toBe(1)
+
+    cleanup()
+  })
+
+  it("expands in range mode when the caret is inside the class string", () => {
+    const cleanup = mockConfig({ unfoldBehavior: "range" })
+    const { editor } = createManager(ATTR_LINE, { cursorCharacter: 20, cursorLine: 0 })
+
+    expect(collapsedCount(editor!)).toBe(0)
+
+    cleanup()
+  })
+
+  it("collapses again in range mode once the caret moves past the closing quote", () => {
+    const cleanup = mockConfig({ unfoldBehavior: "range" })
+    const { editor } = createManager(ATTR_LINE, {
+      cursorCharacter: VALUE_END + 1,
+      cursorLine: 0,
+    })
+
+    expect(collapsedCount(editor!)).toBe(1)
+
+    cleanup()
+  })
+
+  it("re-renders in range mode when the caret moves horizontally into the class string", () => {
+    vi.useFakeTimers()
+    const cleanup = mockConfig({ unfoldBehavior: "range" })
+    const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
+    expect(collapsedCount(editor!)).toBe(1)
+
+    // Same line, different column — line mode would dedupe this away
+    editor!.selection = new Selection(new Position(0, 20))
+    _fireEvent("onDidChangeTextEditorSelection", {
+      selections: [editor!.selection],
+      textEditor: editor,
+    })
+    vi.advanceTimersByTime(200)
+
+    expect(collapsedCount(editor!)).toBe(0)
+
+    cleanup()
+    vi.useRealTimers()
+  })
+
+  it("ignores horizontal movement in line mode", () => {
+    vi.useFakeTimers()
+    const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
+
+    _fireEvent("onDidChangeTextEditorSelection", {
+      selections: [new Selection(new Position(0, 5))],
+      textEditor: editor,
+    })
+    vi.advanceTimersByTime(200)
+    editor!._decorationCalls.splice(0)
+
+    // Another column on the same line — still nothing to re-render
+    _fireEvent("onDidChangeTextEditorSelection", {
+      selections: [new Selection(new Position(0, 30))],
+      textEditor: editor,
+    })
+    vi.advanceTimersByTime(200)
+
+    expect(editor!._decorationCalls).toHaveLength(0)
+
+    vi.useRealTimers()
+  })
+
+  it("picks up a switch to range mode on configuration change", () => {
+    const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
+    expect(collapsedCount(editor!)).toBe(0)
+
+    const cleanup = mockConfig({ unfoldBehavior: "range" })
+    _fireEvent("onDidChangeConfiguration", {
+      affectsConfiguration: () => true,
+    })
+
+    expect(collapsedCount(editor!)).toBe(1)
+
+    cleanup()
   })
 })
