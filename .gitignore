@@ -12,3 +12,4 @@ oxlint.config.mjs.map
 .claude/*
 !.claude/skills/
 meta.json
+sandbox/tailwind.config.js
