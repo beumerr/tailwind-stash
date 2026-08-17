@@ -4,6 +4,29 @@ All notable changes to the Tailwind Stash extension will be documented in this f
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-08-17
+
+### Changed
+
+- **Collapsed classes now stay collapsed while you edit elsewhere on the same line.** Previously the cursor landing anywhere on the line expanded them, which made folding feel unstable while editing tag names and neighbouring attributes. Set `tailwindStash.unfoldBehavior` to `line` to restore the previous behavior (#60)
+
+### Added
+
+- `tailwindStash.unfoldBehavior` setting — `range` (default) expands a class string only when the selection reaches it, `line` expands from anywhere on the line (#60)
+- Warning when a `supportedFunctions` entry contains an invalid regex, instead of ignoring it silently (#44)
+
+### Fixed
+
+- The empty state in the class editor panel is now announced to screen readers (#43)
+
+### Internal
+
+- Upgraded to TypeScript 6.0, which no longer auto-discovers `@types`, so both tsconfigs now declare `types` explicitly (#62)
+- Bundled nine dependency updates: oxfmt, oxlint, esbuild, eslint-plugin-perfectionist, happy-dom, vitest, @vitest/coverage-v8, tailwindcss and @tailwindcss/cli (#61)
+- Fixed two `oxlint` rule names that were silently inert — `object-shorthand` is not an oxlint rule, and `unicorn/prefer-modern-math-api` was missing its plural (#61)
+- Gave the sandbox its own tsconfig and ambient types, clearing the `react/jsx-runtime` errors on the fixtures (#64)
+- 359 unit tests, up from 341
+
 ## [0.2.5] - 2026-03-14
 
 ### Fixed
