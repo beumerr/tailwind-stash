@@ -124,8 +124,8 @@
               "Expand when the cursor is anywhere on the line",
               "Expand only when the cursor reaches the class string itself"
             ],
-            "default": "line",
-            "description": "When a collapsed class string expands again. Use \"range\" to keep classes collapsed while editing elsewhere on the same line."
+            "default": "range",
+            "description": "When a collapsed class string expands again. Use \"line\" to expand from anywhere on the line, as versions before 0.2.6 did."
           },
           "tailwindStash.extraLanguages": {
             "type": "array",

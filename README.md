@@ -112,7 +112,7 @@ This list is fully configurable via the `tailwindStash.supportedFunctions` setti
 | `tailwindStash.foldByDefault` | `true` | Collapse classes automatically when a file is opened |
 | `tailwindStash.placeholderStyle` | `"count"` | Placeholder style: `count` (`3`), `count-long` (`3 classes`), or `empty` (`…`) |
 | `tailwindStash.minClassCount` | `4` | Minimum number of classes before collapsing kicks in |
-| `tailwindStash.unfoldBehavior` | `"line"` | When a collapsed class expands: `line` (cursor anywhere on the line) or `range` (cursor reaches the class string itself) |
+| `tailwindStash.unfoldBehavior` | `"range"` | When a collapsed class expands: `range` (cursor reaches the class string itself) or `line` (cursor anywhere on the line, as before 0.2.6) |
 | `tailwindStash.extraLanguages` | `[]` | (Experimental) Additional language IDs to enable collapsing for. Requires reload. |
 | `tailwindStash.placeholders` | `{}` | Map of short labels to Tailwind class strings for smart fold placeholders and autocomplete |
 | `tailwindStash.placeholderFormat` | `"{keys} +{rest}"` | Format template for matched placeholder labels. `{keys}` = matched names, `{rest}` = extra class count |

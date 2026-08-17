@@ -287,27 +287,27 @@ describe("cursor movement integration", () => {
     window.visibleTextEditors = [editor]
     activate(makeContext())
 
-    // Move cursor to line 1 (the button with classes)
-    editor.selection = new Selection(new Position(1, 0))
+    // Move cursor into the button's class string on line 1. The default
+    // "range" behavior needs the caret to actually reach the classes, which
+    // start at column 17: `  <button class="`
+    const insideButtonClasses = new Selection(new Position(1, 25))
+    editor.selection = insideButtonClasses
     editor._decorationCalls.splice(0)
 
     _fireEvent("onDidChangeTextEditorSelection", {
-      selections: [{ active: { line: 1 } }],
+      selections: [insideButtonClasses],
       textEditor: editor,
     })
     vi.advanceTimersByTime(200)
 
-    // The fold decorations should exclude line 1 — the button line
     const placeholderCalls = editor._decorationCalls.filter(
       (c) =>
         c.decorations.length > 0 && (c.decorations[0] as Record<string, unknown>).renderOptions,
     )
-    // With cursor on line 1 (button class), that range should be excluded
-    // We expect fewer decorations than the 2 detected class ranges
     expect(placeholderCalls.length).toBeGreaterThan(0)
-    const totalDecorations = placeholderCalls.reduce((sum, c) => sum + c.decorations.length, 0)
-    // Only the span on line 2 should be folded (button on line 1 is excluded)
-    expect(totalDecorations).toBeLessThan(2)
+    // Two ranges are detected; the button unfolds, so only the span stays folded
+    const lastRender = editor._decorationCalls.at(-1)!
+    expect(lastRender.decorations).toHaveLength(1)
   })
 
   it("panel active index updates when cursor moves to a different class range", () => {

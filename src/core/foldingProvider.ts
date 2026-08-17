@@ -87,7 +87,7 @@ export class FoldingManager {
   constructor() {
     const config = vscode.workspace.getConfiguration("tailwindStash")
     this.enabled = config.get<boolean>("foldByDefault", true)
-    this.unfoldBehavior = config.get<UnfoldBehavior>("unfoldBehavior", "line")
+    this.unfoldBehavior = config.get<UnfoldBehavior>("unfoldBehavior", "range")
 
     // Create decoration types once — reuse them
     this.placeholderType = vscode.window.createTextEditorDecorationType({})
@@ -154,7 +154,7 @@ export class FoldingManager {
         if (e.affectsConfiguration("tailwindStash")) {
           const updatedConfig = vscode.workspace.getConfiguration("tailwindStash")
           this.enabled = updatedConfig.get<boolean>("foldByDefault", true)
-          this.unfoldBehavior = updatedConfig.get<UnfoldBehavior>("unfoldBehavior", "line")
+          this.unfoldBehavior = updatedConfig.get<UnfoldBehavior>("unfoldBehavior", "range")
           this.cachedConfig = null
           this.updateAllVisibleEditors()
         }

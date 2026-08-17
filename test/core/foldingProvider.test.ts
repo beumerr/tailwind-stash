@@ -140,11 +140,15 @@ describe("getClassRanges", () => {
 
 describe("cursor line exclusion", () => {
   it("excludes range on the cursor line from decorations", () => {
+    // Line behavior expands from column 0; range behavior is covered separately
+    const cleanup = mockConfig({ unfoldBehavior: "line" })
     const text = '<div class="flex items-center p-4 rounded">'
     const { editor } = createManager(text, { cursorLine: 0 })
 
     const hideCalls = editor!._decorationCalls.filter((c) => c.decorations.length === 0)
     expect(hideCalls.length).toBeGreaterThan(0)
+
+    cleanup()
   })
 
   it("includes ranges not on the cursor line", () => {
@@ -664,45 +668,38 @@ describe("shouldExpandForSelection", () => {
 })
 
 describe("unfoldBehavior config", () => {
-  it("defaults to line behavior — caret before the class string expands it", () => {
-    const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
-
-    expect(collapsedCount(editor!)).toBe(0)
-  })
-
-  it("keeps the class collapsed in range mode when the caret is elsewhere on the line", () => {
-    const cleanup = mockConfig({ unfoldBehavior: "range" })
+  it("defaults to range behavior — caret before the class string leaves it collapsed", () => {
     const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
 
     expect(collapsedCount(editor!)).toBe(1)
+  })
+
+  it("expands from anywhere on the line when set to line behavior", () => {
+    const cleanup = mockConfig({ unfoldBehavior: "line" })
+    const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
+
+    expect(collapsedCount(editor!)).toBe(0)
 
     cleanup()
   })
 
   it("expands in range mode when the caret is inside the class string", () => {
-    const cleanup = mockConfig({ unfoldBehavior: "range" })
     const { editor } = createManager(ATTR_LINE, { cursorCharacter: 20, cursorLine: 0 })
 
     expect(collapsedCount(editor!)).toBe(0)
-
-    cleanup()
   })
 
   it("collapses again in range mode once the caret moves past the closing quote", () => {
-    const cleanup = mockConfig({ unfoldBehavior: "range" })
     const { editor } = createManager(ATTR_LINE, {
       cursorCharacter: VALUE_END + 1,
       cursorLine: 0,
     })
 
     expect(collapsedCount(editor!)).toBe(1)
-
-    cleanup()
   })
 
   it("re-renders in range mode when the caret moves horizontally into the class string", () => {
     vi.useFakeTimers()
-    const cleanup = mockConfig({ unfoldBehavior: "range" })
     const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
     expect(collapsedCount(editor!)).toBe(1)
 
@@ -716,12 +713,12 @@ describe("unfoldBehavior config", () => {
 
     expect(collapsedCount(editor!)).toBe(0)
 
-    cleanup()
     vi.useRealTimers()
   })
 
   it("ignores horizontal movement in line mode", () => {
     vi.useFakeTimers()
+    const cleanup = mockConfig({ unfoldBehavior: "line" })
     const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
 
     _fireEvent("onDidChangeTextEditorSelection", {
@@ -740,19 +737,20 @@ describe("unfoldBehavior config", () => {
 
     expect(editor!._decorationCalls).toHaveLength(0)
 
+    cleanup()
     vi.useRealTimers()
   })
 
-  it("picks up a switch to range mode on configuration change", () => {
+  it("picks up a switch to line mode on configuration change", () => {
     const { editor } = createManager(ATTR_LINE, { cursorCharacter: 2, cursorLine: 0 })
-    expect(collapsedCount(editor!)).toBe(0)
+    expect(collapsedCount(editor!)).toBe(1)
 
-    const cleanup = mockConfig({ unfoldBehavior: "range" })
+    const cleanup = mockConfig({ unfoldBehavior: "line" })
     _fireEvent("onDidChangeConfiguration", {
       affectsConfiguration: () => true,
     })
 
-    expect(collapsedCount(editor!)).toBe(1)
+    expect(collapsedCount(editor!)).toBe(0)
 
     cleanup()
   })
