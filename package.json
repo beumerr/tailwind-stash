@@ -312,7 +312,7 @@
     "preact": "^10.29.0",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.3.0",
+    "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }
 }
