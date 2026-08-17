@@ -26,7 +26,10 @@ export default defineConfig({
         statements: 90,
       },
     },
-    exclude: ["test/vscode-e2e/**", "out/**", "node_modules/**"],
+    // .vscode-test holds the VS Code builds the E2E suite downloads, and those
+    // ship their own *.test.mts files. Without this, any vitest run that happens
+    // after an E2E run collects them and fails on "No test suite found".
+    exclude: ["test/vscode-e2e/**", "out/**", "node_modules/**", ".vscode-test/**"],
     globals: true,
   },
 })

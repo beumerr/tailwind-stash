@@ -85,3 +85,10 @@ jobs:
         run: xvfb-run -a npm run test:vscode -- --version ${{ matrix.vscode-version }}
         env:
           DISPLAY: ":99.0"
+
+      # Packaging runs vscode:prepublish, which re-runs the whole check chain.
+      # Doing it here — after the E2E download has populated .vscode-test —
+      # mirrors the order publish.yml uses, so a release-only break surfaces on
+      # the PR instead of at publish time.
+      - name: Package VSIX (mirrors publish.yml ordering)
+        run: npx @vscode/vsce package --no-update-package-json --out tailwind-stash.vsix
