@@ -298,7 +298,7 @@
     "@types/node": "^20.19.37",
     "@types/vscode": "~1.66.0",
     "@vitest/coverage-v8": "^4.1.2",
-    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-electron": "^3.1.0",
     "esbuild": "^0.28.0",
     "eslint-plugin-better-tailwindcss": "^4.3.2",
     "eslint-plugin-no-only-tests": "^3.3.0",
